@@ -139,7 +139,7 @@ export default function DocumentManager({ accessToken }: DocumentManagerProps) {
   }
 
   // Upload de arquivo
-  const uploadFile = async () => {
+  const handleUploadFile = async () => {
     if (!uploadFile) return
 
     setLoading(true)
@@ -314,7 +314,7 @@ export default function DocumentManager({ accessToken }: DocumentManagerProps) {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={uploadFile} disabled={!uploadFile || loading}>
+                <Button onClick={handleUploadFile} disabled={!uploadFile || loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Upload
                 </Button>
