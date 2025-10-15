@@ -26,6 +26,7 @@ import {
   XCircle,
   Clock,
   Home,
+  ExternalLink,
 } from "lucide-react";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
@@ -302,6 +303,50 @@ export default function DashboardOverview() {
                   </div>
                 );
               })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gerenciador de Documentos */}
+        <Card className="col-span-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Gerenciador de Documentos
+            </CardTitle>
+            <CardDescription>
+              Acesse e organize seus documentos do Google Drive
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold">Funcionalidades</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Upload de documentos</li>
+                  <li>• Organização em pastas</li>
+                  <li>• Busca avançada</li>
+                  <li>• Visualização online</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-semibold">Integração</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Google Drive API</li>
+                  <li>• Autenticação OAuth</li>
+                  <li>• Sincronização automática</li>
+                  <li>• Controle de permissões</li>
+                </ul>
+              </div>
+              <div className="flex items-center justify-center">
+                <a
+                  href="/documents"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Acessar Gerenciador
+                </a>
+              </div>
             </div>
           </CardContent>
         </Card>
