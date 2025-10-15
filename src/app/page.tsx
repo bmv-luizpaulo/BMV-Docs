@@ -32,7 +32,6 @@ import { useSession, signOut } from "next-auth/react";
 
 import { allData } from "@/lib/data";
 import type { Fazenda, Nucleo } from "@/lib/types";
-import { BmvLogo } from "@/components/icons";
 import DashboardOverview from "@/components/app/dashboard-overview";
 import FarmChecklist from "@/components/app/farm-checklist";
 import AuthGuard from "@/components/auth/auth-guard";
@@ -63,10 +62,15 @@ export default function DashboardPage() {
         } hidden md:flex`}
       >
         <div className="flex h-full max-h-screen flex-col gap-2">
+          
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <a href="#" className="flex items-center gap-2 font-semibold">
-              <BmvLogo className="h-8 w-8 text-primary" />
-              {isSidebarOpen && <span className="">BMV Docs</span>}
+              <img 
+                src="/image/BMV.png" 
+                alt="BMV Logo" 
+                className="h-8 w-8 object-contain rounded-sm"
+              />
+              {isSidebarOpen && <span className="text-primary">BMV Docs</span>}
             </a>
             <Button
               variant="outline"

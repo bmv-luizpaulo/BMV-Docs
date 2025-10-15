@@ -26,7 +26,7 @@ Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
 
 ```env
 # NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://localhost:9002
 NEXTAUTH_SECRET=sua-chave-secreta-aqui
 
 # Google OAuth Configuration
@@ -48,8 +48,8 @@ NODE_ENV=development
 3. Ative a API do Google+ e Google OAuth2
 4. Vá para "Credenciais" e crie uma credencial OAuth 2.0
 5. Configure as URLs autorizadas:
-   - **URIs de redirecionamento autorizados**: `http://localhost:3000/api/auth/callback/google`
-   - **Origens JavaScript autorizadas**: `http://localhost:3000`
+   - **URIs de redirecionamento autorizados**: `http://localhost:9002/api/auth/callback/google`
+   - **Origens JavaScript autorizadas**: `http://localhost:9002`
 6. Copie o Client ID e Client Secret para o arquivo `.env.local`
 
 ### 4. Executar o Projeto

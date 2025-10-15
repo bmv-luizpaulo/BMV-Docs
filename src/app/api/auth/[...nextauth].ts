@@ -1,8 +1,6 @@
 
 import NextAuth, { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import type { JWT } from "next-auth/jwt"
-import type { User, Account, Profile, Session } from "next-auth"
 
 // Verificar se as variáveis de ambiente estão definidas
 if (!process.env.GOOGLE_CLIENT_ID) {
@@ -27,24 +25,22 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/login',
-    error: '/login', // Redirect to login page on error
+    error: '/login',
   },
   callbacks: {
-    async jwt({ token, account, profile }: { token: JWT; account: Account | null; profile?: Profile | undefined; user?: User | undefined; }): Promise<JWT> {
-      // Primeira vez que o JWT é criado
+    async jwt({ token, account, profile }) {
       if (account && profile) {
-        token.accessToken = account.access_token;
-        token.id = profile.sub; // Google profile 'sub' is the user ID
+        token.accessToken = account.access_token
+        token.id = profile.sub
       }
-      return token;
+      return token
     },
-    async session({ session, token }: { session: Session; token: JWT; }): Promise<Session> {
-      // Adicionar dados do token ao objeto da sessão
-      if (session.user) {
-        (session.user as { id?: string }).id = token.id as string;
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string
+        session.accessToken = token.accessToken as string
       }
-      (session as { accessToken?: string }).accessToken = token.accessToken as string;
-      return session;
+      return session
     },
     async redirect({ url, baseUrl }) {
       // Permite redirecionamentos relativos
