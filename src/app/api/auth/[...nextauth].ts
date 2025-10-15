@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions, User } from "next-auth"
+import NextAuth, { NextAuthOptions, User, Account } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import { JWT } from "next-auth/jwt"
 
@@ -60,6 +60,15 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider === "google") {
+        if (profile?.email && profile.email.endsWith("@bmv.global")) {
+          return true // Permite o login
+        }
+      }
+      return false // Nega o acesso para outros domínios ou provedores
+    },
+    
     async jwt({ token, user, account }): Promise<JWT> {
       // Na primeira vez que o usuário loga (user e account estão presentes)
       if (account && user) {
