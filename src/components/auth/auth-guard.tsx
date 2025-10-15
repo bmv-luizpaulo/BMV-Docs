@@ -1,47 +1,35 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/firebase/provider";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import AuthErrorHandler from "./auth-error-handler";
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const [mounted, setMounted] = useState(false);
-  const { data: session, status } = useSession();
+  const auth = useAuth();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        router.push("/login");
+      }
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    if (!mounted) return;
-    if (status === "loading") return; // Ainda carregando
+    return () => unsubscribe();
+  }, [auth, router]);
 
-    if (!session) {
-      router.push("/login");
-    }
-  }, [session, status, router, mounted]);
-
-  // Evita hidratação mismatch
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar loading enquanto verifica autenticação
-  if (status === "loading") {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
@@ -52,15 +40,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // Se não está autenticado, não renderiza nada (será redirecionado)
-  if (!session) {
-    return null;
+  if (!user) {
+    return null; // O redirecionamento já foi acionado
   }
 
-  // Se está autenticado, renderiza o conteúdo com tratamento de erro
-  return (
-    <AuthErrorHandler>
-      {children}
-    </AuthErrorHandler>
-  );
+  return <>{children}</>;
 }

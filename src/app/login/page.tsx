@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { signIn } from "next-auth/react"
+import { useAuth } from "@/firebase/provider";
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,43 +17,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BmvLogo } from "@/components/icons"
 import { Loader2, Chrome, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const auth = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    
-    // Verificar se há erro na URL
-    const urlParams = new URLSearchParams(window.location.search)
-    const errorParam = urlParams.get("error")
-    
-    const errorMessages: { [key: string]: string } = {
-      Configuration: "Erro de configuração no servidor. Verifique as variáveis de ambiente.",
-      AccessDenied: "Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.",
-      CredentialsSignin: "Email ou senha incorretos.",
-      Default: "Não foi possível fazer login. Tente novamente mais tarde.",
-    }
-    
-    if (errorParam) {
-      setError(errorMessages[errorParam] || errorMessages.Default)
-    }
-  }, [])
-
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
-    // Limpar erros quando o usuário começar a digitar
     if (error) setError(null)
   }
 
@@ -68,21 +51,15 @@ export default function LoginPage() {
     setError(null)
     
     try {
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
-      
-      if (result?.error) {
-        setError("Email ou senha incorretos")
-      } else if (result?.ok) {
-        // Redirecionar para a página inicial
-        window.location.href = "/"
-      }
-    } catch (err) {
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      router.push("/");
+    } catch (err: any) {
       console.error("Sign in error", err)
-      setError("Erro ao fazer login. Tente novamente.")
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError("Email ou senha incorretos.");
+      } else {
+        setError("Erro ao fazer login. Tente novamente.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -90,42 +67,24 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
+    setError(null)
+    const provider = new GoogleAuthProvider();
     try {
-      await signIn("google", { callbackUrl: "/" })
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      if (user.email && user.email.endsWith('@bmv.global')) {
+        router.push("/");
+      } else {
+        await auth.signOut();
+        setError("Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.");
+      }
     } catch (err) {
-      console.error("Sign in error", err)
+      console.error("Google sign in error", err)
+      setError("Erro ao fazer login com Google. Tente novamente.")
+    } finally {
       setIsLoading(false)
     }
-  }
-
-  // Evita hidratação mismatch
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center space-y-4">
-              <div className="flex justify-center">
-                <BmvLogo className="h-16 w-16 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">
-                  Bem-vindo ao BMV Docs
-                </CardTitle>
-                <CardDescription className="text-gray-600 mt-2">
-                  Sistema de gestão documental para o Programa BMV
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -153,7 +112,6 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            {/* Formulário de Login */}
             <form onSubmit={handleEmailSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -216,7 +174,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Divisor */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -228,7 +185,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Botão Google */}
             <Button
               onClick={handleGoogleSignIn}
               disabled={isLoading}
@@ -249,7 +205,6 @@ export default function LoginPage() {
               )}
             </Button>
 
-            {/* Link para Cadastro */}
             <div className="text-center">
               <p className="text-sm text-gray-500">
                 Não tem uma conta?{" "}
@@ -258,20 +213,7 @@ export default function LoginPage() {
                 </Link>
               </p>
             </div>
-
-            {/* Termos */}
-            <div className="text-center">
-              <p className="text-sm text-gray-500">
-                Ao fazer login, você concorda com nossos{" "}
-                <a href="#" className="text-primary hover:underline">
-                  Termos de Uso
-                </a>{" "}
-                e{" "}
-                <a href="#" className="text-primary hover:underline">
-                  Política de Privacidade
-                </a>
-              </p>
-            </div>
+            
           </CardContent>
         </Card>
       </div>
