@@ -3,14 +3,39 @@ import { initializeApp, getApp, getApps } from "firebase/app";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
+// Verificar se as variáveis de ambiente do Firebase estão definidas
+if (!process.env.FIREBASE_API_KEY) {
+  throw new Error("FIREBASE_API_KEY não está definido nas variáveis de ambiente")
+}
+
+if (!process.env.FIREBASE_AUTH_DOMAIN) {
+  throw new Error("FIREBASE_AUTH_DOMAIN não está definido nas variáveis de ambiente")
+}
+
+if (!process.env.FIREBASE_PROJECT_ID) {
+  throw new Error("FIREBASE_PROJECT_ID não está definido nas variáveis de ambiente")
+}
+
+if (!process.env.FIREBASE_STORAGE_BUCKET) {
+  throw new Error("FIREBASE_STORAGE_BUCKET não está definido nas variáveis de ambiente")
+}
+
+if (!process.env.FIREBASE_MESSAGING_SENDER_ID) {
+  throw new Error("FIREBASE_MESSAGING_SENDER_ID não está definido nas variáveis de ambiente")
+}
+
+if (!process.env.FIREBASE_APP_ID) {
+  throw new Error("FIREBASE_APP_ID não está definido nas variáveis de ambiente")
+}
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDdIaP40a2Sbwfg_loLeHgH0UIV4lEWRXs",
-  authDomain: "studio-5757745802-11667.firebaseapp.com",
-  projectId: "studio-5757745802-11667",
-  storageBucket: "studio-5757745802-11667.appspot.com",
-  messagingSenderId: "918694849663",
-  appId: "1:918694849663:web:54a0ce3328b6040685234a"
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
 };
 
 // Initialize Firebase
