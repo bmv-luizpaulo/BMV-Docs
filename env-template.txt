@@ -1,0 +1,28 @@
+# BMV Docs - Arquivo de Configuração de Ambiente
+# ================================================
+# 
+# INSTRUÇÕES:
+# 1. Copie este arquivo para .env.local na raiz do projeto
+# 2. Substitua os valores placeholder pelas suas credenciais reais
+# 3. NUNCA commite o arquivo .env.local para o repositório
+#
+# ===========================================
+
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=bmv-docs-secret-key-2024-development-only
+
+# Google OAuth Configuration
+# IMPORTANTE: Você precisa configurar essas credenciais no Google Cloud Console
+# 1. Acesse: https://console.developers.google.com/
+# 2. Crie um projeto ou selecione um existente
+# 3. Ative a API do Google+ e Google OAuth2
+# 4. Vá para "Credenciais" e crie uma credencial OAuth 2.0
+# 5. Configure as URLs autorizadas:
+#    - URIs de redirecionamento: http://localhost:3000/api/auth/callback/google
+#    - Origens JavaScript: http://localhost:3000
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# Ambiente
+NODE_ENV=development
