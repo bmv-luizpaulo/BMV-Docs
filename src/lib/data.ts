@@ -72,7 +72,6 @@ const documentNames: Record<DocumentoSubcategory, string[]> = {
 
 const statuses: DocumentoStatus[] = ["Completo", "Pendente", "Incompleto", "Divergência"];
 
-const getRandomStatus = (): DocumentoStatus => statuses[Math.floor(Math.random() * statuses.length)];
 const getRandomDate = () => {
     const start = new Date(2023, 0, 1);
     const end = new Date();
@@ -93,7 +92,7 @@ const createDocuments = (farmId: string): Documento[] => {
                     name,
                     category: category as DocumentoCategory,
                     subcategory: subcategory as DocumentoSubcategory,
-                    status: getRandomStatus(),
+                    status: "Pendente",
                     lastUpdated: getRandomDate(),
                     dueDate: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
                     fileName: `${name.replace(/\s+/g, '_')}.pdf`,
@@ -104,6 +103,15 @@ const createDocuments = (farmId: string): Documento[] => {
             });
         });
     });
+
+    // For demonstration, let's set some varied statuses after creation to avoid hydration errors but still show variety.
+    // This should be done in a way that is consistent between server and client.
+    // A simple way is to do it based on a non-random value like the docId.
+    const deterministicStatuses: DocumentoStatus[] = ["Completo", "Pendente", "Incompleto", "Divergência"];
+    docs.forEach((doc, index) => {
+        doc.status = deterministicStatuses[index % deterministicStatuses.length];
+    });
+
 
     return docs;
 };
