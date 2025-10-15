@@ -8,6 +8,7 @@ import {
   Clock,
   File,
   Home,
+  Link,
   User,
   XCircle,
 } from "lucide-react";
@@ -109,9 +110,10 @@ export default function FarmChecklist({ farm, onBack }: FarmChecklistProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%]">Documento</TableHead>
+                  <TableHead className="w-[35%]">Documento</TableHead>
                   <TableHead className="w-[20%]">Subcategoria</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Arquivo</TableHead>
                   <TableHead>Última Atualização</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -133,6 +135,21 @@ export default function FarmChecklist({ farm, onBack }: FarmChecklistProps) {
                           <Icon className="mr-1 h-3 w-3" />
                           {doc.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {doc.fileUrl ? (
+                          <a
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm text-primary hover:underline"
+                          >
+                            <Link className="h-3 w-3" />
+                            Ver arquivo
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Nenhum</span>
+                        )}
                       </TableCell>
                       <TableCell>{new Date(doc.lastUpdated).toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell className="text-right">

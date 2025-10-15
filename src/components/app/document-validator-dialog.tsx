@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Documento, DocumentoStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { validateDocument } from "@/app/actions";
-import { Loader2, UploadCloud, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, UploadCloud, CheckCircle, XCircle, File as FileIcon, Trash2 } from "lucide-react";
 import type { AIDocumentValidationOutput } from "@/ai/flows/ai-document-validation";
 
 interface DocumentValidatorDialogProps {
@@ -47,6 +47,7 @@ export function DocumentValidatorDialog({
   const [notes, setNotes] = React.useState(document.notes || "");
   const [isLoading, setIsLoading] = React.useState(false);
   const [aiResult, setAiResult] = React.useState<AIDocumentValidationOutput | null>(null);
+  const [fileName, setFileName] = React.useState<string | undefined>(document.fileName);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -56,12 +57,14 @@ export function DocumentValidatorDialog({
     setFile(null);
     setFileDataUri(null);
     setAiResult(null);
+    setFileName(document.fileName);
   }, [document]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setFileName(selectedFile.name);
       const reader = new FileReader();
       reader.onload = (loadEvent) => {
         setFileDataUri(loadEvent.target?.result as string);
@@ -69,6 +72,16 @@ export function DocumentValidatorDialog({
       reader.readAsDataURL(selectedFile);
     }
   };
+  
+  const clearFile = () => {
+    setFile(null);
+    setFileDataUri(null);
+    setFileName(undefined);
+    setAiResult(null);
+    if(fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   const handleAnalyze = async () => {
     if (!fileDataUri) {
@@ -101,11 +114,17 @@ export function DocumentValidatorDialog({
   };
 
   const handleSave = () => {
+    // Simulate file upload to a permanent storage and get a URL
+    const fileUrl = file ? `https://example.com/uploads/${Date.now()}-${file.name}` : document.fileUrl;
+
     const updatedDocument: Documento = {
       ...document,
       status,
       notes,
       lastUpdated: new Date().toISOString(),
+      fileUrl: fileUrl,
+      fileName: fileName,
+      fileSize: file ? file.size : document.fileSize
     };
     onUpdate(updatedDocument);
     toast({
@@ -121,6 +140,7 @@ export function DocumentValidatorDialog({
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const selectedFile = e.dataTransfer.files[0];
       setFile(selectedFile);
+      setFileName(selectedFile.name);
       const reader = new FileReader();
       reader.onload = (loadEvent) => {
         setFileDataUri(loadEvent.target?.result as string);
@@ -146,35 +166,59 @@ export function DocumentValidatorDialog({
         <div className="grid gap-6 py-4">
           <div className="grid gap-2">
             <Label htmlFor="file-upload">Upload do Documento</Label>
-            <div
-              className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/80 transition-colors"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
-                {file ? (
-                  <p className="font-semibold text-primary">{file.name}</p>
-                ) : (
-                  <>
-                    <p className="mb-1 text-sm text-muted-foreground">
-                      <span className="font-semibold">Clique para enviar</span> ou arraste e solte
-                    </p>
-                    <p className="text-xs text-muted-foreground">PDF, PNG, JPG (MAX. 10MB)</p>
-                  </>
-                )}
+            {fileName && !fileDataUri && (
+                <div className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                        <FileIcon className="w-4 h-4 text-muted-foreground" />
+                        <span>{fileName}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={clearFile} aria-label="Remover arquivo existente">
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                </div>
+            )}
+            
+            {!fileName &&
+              <div
+                className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/80 transition-colors"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
+                    <>
+                      <p className="mb-1 text-sm text-muted-foreground">
+                        <span className="font-semibold">Clique para enviar</span> ou arraste e solte
+                      </p>
+                      <p className="text-xs text-muted-foreground">PDF, PNG, JPG (MAX. 10MB)</p>
+                    </>
+                </div>
+                <Input
+                  ref={fileInputRef}
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="application/pdf,image/png,image/jpeg"
+                />
               </div>
-              <Input
-                ref={fileInputRef}
-                id="file-upload"
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-                accept="application/pdf,image/png,image/jpeg"
-              />
-            </div>
-            <Button onClick={handleAnalyze} disabled={isLoading || !file}>
+            }
+
+            {fileDataUri && file && (
+                <div className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                      <FileIcon className="w-4 h-4 text-muted-foreground" />
+                      <span>{file.name}</span>
+                      <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(2)} KB)</span>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={clearFile} aria-label="Remover arquivo">
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
+              </div>
+            )}
+
+            <Button onClick={handleAnalyze} disabled={isLoading || !fileDataUri}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
