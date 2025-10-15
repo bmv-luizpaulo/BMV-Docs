@@ -1,76 +1,5 @@
 import type { Nucleo, DocumentoStatus, Documento, Fazenda, DocumentoCategory, DocumentoSubcategory } from "./types";
-
-// Estrutura real baseada na análise dos documentos BMV
-const documentCategories: Record<DocumentoCategory, DocumentoSubcategory[]> = {
-  'Coletivo': [
-    'Elegibilidade', 'Legitimacao', 'Inventario', 'Quantificacao', 
-    'Linha_Base', 'Concepcao_Projeto', 'Validacao', 'Verificacao', 
-    'Certificacao', 'Registro_CPR', 'Custodia_SKR', 'Transferencias',
-    'Emissao_Certificado', 'Monitoramento', 'Reemissao_Certificado'
-  ],
-  'Individual': ['CAR_Relatorio', 'PAPA', 'Documentos_Pessoais', 'Documentos_Propriedade', 'Financeiro'],
-  'Adesão': ['TCA'],
-  'Posse_Dominio': ['DPD'],
-  'Aceite_Representacao': ['TAR'],
-  'Transferencia': ['Transferencia_Direitos'],
-  'Autorizacao': ['Autorizacoes'],
-  'Diversos': ['Diversos']
-};
-
-const documentNames: Record<DocumentoSubcategory, string[]> = {
-  // Coletivos
-  'Elegibilidade': [
-    'Livro de registro da abertura do projeto',
-    'Oficio de Solicitação Audiência Pública',
-    'Ata da Audiência Pública',
-    'Lei de Reconhecimento do Programa',
-    'Declaração de Reconhecimento de Programa de Desenvolvimento Sustentável'
-  ],
-  'Legitimacao': [
-    'Estatuto da Associação',
-    'CNPJ da Associação',
-    'Documentos do Presidente',
-    'Documentos da Diretoria',
-    'Atas da Associação',
-    'Contratos e Termos'
-  ],
-  'Inventario': [
-    'Relatório de Inventário Florestal',
-    'Relatório de Análise de Solo',
-    'Relatório de Inventário Florestal 10%'
-  ],
-  'Quantificacao': [
-    'Relatório de Quantificação de Estoques'
-  ],
-  'Linha_Base': ['Documentos de Linha de Base'],
-  'Concepcao_Projeto': ['Documentos de Concepção do Projeto'],
-  'Validacao': ['Relatórios de Validação IDESA', 'Relatórios de Validação UNESP'],
-  'Verificacao': ['Relatórios de Verificação TUV Rheinland'],
-  'Certificacao': ['Certificados', 'Selos'],
-  'Registro_CPR': ['Cédula de Produto Rural', 'Registro de CPR'],
-  'Custodia_SKR': ['Custódias UCS'],
-  'Transferencias': ['Documentos de Transferência'],
-  'Emissao_Certificado': ['Certificados de Títulos'],
-  'Monitoramento': ['Relatórios de Monitoramento'],
-  'Reemissao_Certificado': ['Reemissão de Certificados'],
-  
-  // Individuais
-  'CAR_Relatorio': ['CAR - Relatório de Áreas'],
-  'PAPA': ['Documentos PAPA'],
-  'Documentos_Pessoais': ['RG', 'CPF', 'Comprovante de Endereço', 'Certidão de Casamento'],
-  'Documentos_Propriedade': ['Matrícula do Imóvel', 'CCIR', 'Memorial de Georreferenciamento'],
-  'Financeiro': ['Comprovantes Financeiros', 'Relatórios de Vendas'],
-  
-  // Outros
-  'TCA': ['Termos e Condições de Adesão ao Programa BMV'],
-  'DPD': ['Declaração de Posse e Domínio'],
-  'TAR': ['Termo de Aceite e Representação'],
-  'Transferencia_Direitos': ['Transferência de Direitos Creditórios'],
-  'Autorizacoes': ['Autorizações BMV'],
-  'Diversos': ['Documentos Diversos', 'Comunicados', 'Protocolos']
-};
-
-const statuses: DocumentoStatus[] = ["Completo", "Pendente", "Incompleto", "Divergência"];
+import { documentCategories, documentNames } from "./document-structure";
 
 const getRandomDate = () => {
     const start = new Date(2023, 0, 1);
@@ -109,7 +38,9 @@ const createDocuments = (farmId: string): Documento[] => {
     // A simple way is to do it based on a non-random value like the docId.
     const deterministicStatuses: DocumentoStatus[] = ["Completo", "Pendente", "Incompleto", "Divergência"];
     docs.forEach((doc, index) => {
-        doc.status = deterministicStatuses[index % deterministicStatuses.length];
+        // A simple deterministic way to assign statuses
+        const statusIndex = (parseInt(doc.id.split('-').pop() || '0', 10)) % deterministicStatuses.length;
+        doc.status = deterministicStatuses[statusIndex];
     });
 
 
@@ -142,6 +73,16 @@ const produtoresReais = {
     'Produtor Arinos D',
     'Produtor Arinos E',
     'Produtor Arinos F'
+  ],
+  'n5': [ // Núcleo Juruena
+    'Agropecuária Juruena',
+    'Fazenda Rio Claro',
+    'Grupo Scheffer'
+  ],
+  'n6': [ // Núcleo Tapajós
+    'Cooperativa Tapajós',
+    'Fazenda Santa Luzia',
+    'Agro Tapajós'
   ]
 };
 
@@ -174,14 +115,14 @@ const nucleosData: Nucleo[] = [
         name: "Xingu",
         code: "01-NUCLEO_XINGU",
         nucleadores: [{id: "n1-nuc-1", name: "Nucleador Xingu A"}],
-        fazendas: createFarms("n1", 5),
+        fazendas: createFarms("n1", 4),
     },
     {
         id: "n2",
         name: "Teles Pires",
         code: "02-NUCLEO_TELES_PIRES",
         nucleadores: [{id: "n2-nuc-1", name: "Nucleador Teles Pires A"}],
-        fazendas: createFarms("n2", 8),
+        fazendas: createFarms("n2", 4),
     },
     {
         id: "n3",
@@ -196,6 +137,20 @@ const nucleosData: Nucleo[] = [
         code: "04-NUCLEO_ARINOS",
         nucleadores: [{id: "n4-nuc-1", name: "Nucleador Arinos A"}],
         fazendas: createFarms("n4", 6),
+    },
+    {
+        id: "n5",
+        name: "Juruena",
+        code: "05-NUCLEO_JURUENA",
+        nucleadores: [{id: "n5-nuc-1", name: "Nucleador Juruena A"}],
+        fazendas: createFarms("n5", 3),
+    },
+    {
+        id: "n6",
+        name: "Tapajós",
+        code: "06-NUCLEO_TAPAJOS",
+        nucleadores: [{id: "n6-nuc-1", name: "Nucleador Tapajós A"}],
+        fazendas: createFarms("n6", 3),
     },
 ];
 
