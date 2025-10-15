@@ -27,16 +27,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Bell, Home, Search, ChevronsLeft, Folder, User } from "lucide-react";
+import { Home, ChevronsLeft, Folder, User } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
+
 
 import { allData } from "@/lib/data";
 import type { Fazenda, Nucleo } from "@/lib/types";
 import { BmvLogo } from "@/components/icons";
 import DashboardOverview from "@/components/app/dashboard-overview";
 import FarmChecklist from "@/components/app/farm-checklist";
-import { placeholderImages } from "@/lib/placeholder-images";
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
   const [selectedFarm, setSelectedFarm] = React.useState<Fazenda | null>(null);
   const [isSidebarOpen, setSidebarOpen] = React.useState(true);
 
@@ -167,25 +169,29 @@ export default function DashboardPage() {
           <div className="w-full flex-1">
             {/* Search can be implemented later */}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="rounded-full">
-                <Avatar>
-                  <AvatarImage src={placeholderImages[0].imageUrl} alt="User avatar" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-                <span className="sr-only">Toggle user menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Configurações</DropdownMenuItem>
-              <DropdownMenuItem>Suporte</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Sair</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {status === 'authenticated' ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage src={session.user?.image ?? undefined} alt="User avatar" />
+                    <AvatarFallback>{session.user?.name?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">Toggle user menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{session.user?.name}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Configurações</DropdownMenuItem>
+                <DropdownMenuItem>Suporte</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut()}>Sair</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={() => signIn('google')}>Fazer Login</Button>
+          )}
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           <ScrollArea className="h-[calc(100vh-120px)]">
