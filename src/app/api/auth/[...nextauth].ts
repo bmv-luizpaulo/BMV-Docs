@@ -58,15 +58,13 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     signIn: "/login",
-    error: "/login", // Página de erro aponta para o login
+    error: "/login", // Página de erro aponta para o login com parâmetro
   },
 
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === "google") {
         // A 'profile' de um provedor OAuth pode ter diferentes formatos.
-        // É mais seguro verificar a propriedade 'email' dentro de um bloco 'any'
-        // para evitar erros de tipo em tempo de compilação.
         const userProfile = profile as any;
         if (userProfile?.email && userProfile.email.endsWith("@bmv.global")) {
           return true; // Permite o login

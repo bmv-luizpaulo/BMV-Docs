@@ -22,7 +22,7 @@ export default function LoginPage() {
 
   const errorMessages: { [key: string]: string } = {
     Configuration: "Erro de configuração no servidor. Verifique as variáveis de ambiente.",
-    AccessDenied: "Acesso negado. Por favor, tente novamente.",
+    AccessDenied: "Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.",
     Default: "Não foi possível fazer login. Tente novamente mais tarde.",
   }
 
