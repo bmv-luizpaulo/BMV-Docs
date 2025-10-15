@@ -5,10 +5,6 @@ import Link from 'next/link';
 export default function NotFound() {
   return (
     <>
-      <head>
-        <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Arvo' />
-      </head>
-      
       <section className="page_404">
         <div className="container">
           <div className="row">	
