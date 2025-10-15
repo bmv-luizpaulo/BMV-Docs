@@ -16,31 +16,46 @@ const createDocuments = (farmId: string): Documento[] => {
         subcategories.forEach(subcategory => {
             const names = documentNames[subcategory];
             names.forEach(name => {
+                const currentDocId = docId++;
+                const docIdentifier = `doc-${farmId}-${currentDocId}`;
+                
+                // Deterministic file size based on document ID
+                const fileSize = 100000 + (parseInt(farmId.replace(/\D/g, ''), 10) + currentDocId) * 1000 % 4900000;
+                
+                // Deterministic workflow step
+                const workflowStep = category === 'Coletivo' ? (currentDocId % 15) + 1 : undefined;
+
                 docs.push({
-                    id: `doc-${farmId}-${docId++}`,
+                    id: docIdentifier,
                     name,
                     category: category as DocumentoCategory,
                     subcategory: subcategory as DocumentoSubcategory,
                     status: "Pendente",
-                    lastUpdated: getRandomDate(),
-                    dueDate: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
+                    lastUpdated: "2024-01-01", // Using a fixed date to avoid hydration issues
+                    dueDate: new Date(new Date("2024-01-01").setMonth(new Date("2024-01-01").getMonth() + 6)).toISOString().split('T')[0],
                     fileName: `${name.replace(/\s+/g, '_')}.pdf`,
-                    fileSize: Math.floor(Math.random() * 5000000) + 100000, // 100KB a 5MB
+                    fileSize: fileSize,
                     uploadedBy: 'Sistema BMV',
-                    workflowStep: category === 'Coletivo' ? Math.floor(Math.random() * 15) + 1 : undefined
+                    workflowStep: workflowStep
                 });
             });
         });
     });
 
     // For demonstration, let's set some varied statuses after creation to avoid hydration errors but still show variety.
-    // This should be done in a way that is consistent between server and client.
+    // This is done in a way that is consistent between server and client.
     // A simple way is to do it based on a non-random value like the docId.
     const deterministicStatuses: DocumentoStatus[] = ["Completo", "Pendente", "Incompleto", "Divergência"];
     docs.forEach((doc, index) => {
         // A simple deterministic way to assign statuses
         const statusIndex = (parseInt(doc.id.split('-').pop() || '0', 10)) % deterministicStatuses.length;
         doc.status = deterministicStatuses[statusIndex];
+        
+        // Deterministic date
+        const baseDate = new Date(2023, 0, 1);
+        const dayOffset = (parseInt(doc.id.replace(/\D/g, '').slice(-4),10)) % 365;
+        baseDate.setDate(baseDate.getDate() + dayOffset);
+        doc.lastUpdated = baseDate.toISOString().split('T')[0];
     });
 
 
