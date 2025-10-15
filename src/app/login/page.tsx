@@ -1,83 +1,44 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { BmvLogo } from "@/components/icons";
-import { Loader2, Chrome, Mail, Lock } from "lucide-react";
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { BmvLogo } from "@/components/icons"
+import { Loader2, Chrome } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const errorParam = searchParams.get("error")
 
-  const handleCredentialsSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      setError("Por favor, preencha todos os campos.");
-      return;
-    }
+  const errorMessages: { [key: string]: string } = {
+    Configuration: "Erro de configuração no servidor. Verifique as variáveis de ambiente.",
+    AccessDenied: "Acesso negado. Por favor, tente novamente.",
+    Default: "Não foi possível fazer login. Tente novamente mais tarde.",
+  }
 
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl: "/",
-      });
-
-      if (result?.error) {
-        setError("Email ou senha incorretos. Tente novamente.");
-      } else if (result?.ok) {
-        // Verificar se a sessão foi criada com sucesso
-        const session = await getSession();
-        if (session) {
-          router.push("/");
-        }
-      }
-    } catch (err) {
-      setError("Erro inesperado. Tente novamente.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const error = errorParam ? (errorMessages[errorParam] || errorMessages.Default) : null
 
   const handleGoogleSignIn = async () => {
+    setIsLoading(true)
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const result = await signIn("google", {
-        redirect: false,
-        callbackUrl: "/",
-      });
-
-      if (result?.error) {
-        setError("Erro ao fazer login. Tente novamente.");
-      } else if (result?.ok) {
-        // Verificar se a sessão foi criada com sucesso
-        const session = await getSession();
-        if (session) {
-          router.push("/");
-        }
-      }
+      // O callbackUrl irá redirecionar para a página inicial após o login bem-sucedido
+      await signIn("google", { callbackUrl: "/" })
     } catch (err) {
-      setError("Erro inesperado. Tente novamente.");
-    } finally {
-      setIsLoading(false);
+      console.error("Sign in error", err)
+      setIsLoading(false) // Garante que o loading para se o signIn falhar
     }
-  };
+    // O loading não precisa ser parado aqui se o signIn for bem-sucedido, pois a página será redirecionada.
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
@@ -96,89 +57,34 @@ export default function LoginPage() {
               </CardDescription>
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-6">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
-            {/* Formulário de Login com Email e Senha */}
-            <form onSubmit={handleCredentialsSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-12 text-base font-medium"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Entrando...
-                  </>
-                ) : (
-                  "Entrar"
-                )}
-              </Button>
-            </form>
-            
-            {/* Divisor */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Ou continue com</span>
-              </div>
-            </div>
-            
-            {/* Botão do Google */}
-            <div className="space-y-4">
-              <Button
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                variant="outline"
-                className="w-full h-12 text-base font-medium"
-                size="lg"
-              >
-                <Chrome className="mr-2 h-5 w-5" />
-                Entrar com Google
-              </Button>
-            </div>
-            
+
+            <Button
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              variant="outline"
+              className="w-full h-12 text-base font-medium"
+              size="lg"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Aguarde...
+                </>
+              ) : (
+                <>
+                  <Chrome className="mr-2 h-5 w-5" />
+                  Entrar com Google
+                </>
+              )}
+            </Button>
+
             <div className="text-center">
               <p className="text-sm text-gray-500">
                 Ao fazer login, você concorda com nossos{" "}
@@ -193,16 +99,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-        
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
-            Precisa de ajuda?{" "}
-            <a href="mailto:suporte@bmv.com" className="text-primary hover:underline">
-              Entre em contato
-            </a>
-          </p>
-        </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSession, signOut } from "next-auth/react";
 import {
   Accordion,
   AccordionContent,
@@ -9,13 +10,6 @@ import {
 } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,15 +20,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Home, ChevronsLeft, Folder, User } from "lucide-react";
+import { Home, ChevronsLeft, Folder, User, LogOut } from "lucide-react";
+import { BmvLogo } from "@/components/icons";
 
 import { allData } from "@/lib/data";
-import type { Fazenda, Nucleo } from "@/lib/types";
+import type { Fazenda } from "@/lib/types";
 import DashboardOverview from "@/components/app/dashboard-overview";
 import FarmChecklist from "@/components/app/farm-checklist";
+import AuthGuard from "@/components/auth/auth-guard";
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const { data: session } = useSession();
   const [selectedFarm, setSelectedFarm] = React.useState<Fazenda | null>(null);
   const [isSidebarOpen, setSidebarOpen] = React.useState(true);
 
@@ -49,6 +45,9 @@ export default function DashboardPage() {
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
+  
+  const user = session?.user;
+  const userInitials = user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "U";
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
@@ -61,11 +60,7 @@ export default function DashboardPage() {
           
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <a href="#" className="flex items-center gap-2 font-semibold">
-              <img 
-                src="/image/BMV.png" 
-                alt="BMV Logo" 
-                className="h-8 w-8 object-contain rounded-sm"
-              />
+              <BmvLogo className="h-8 w-8 object-contain rounded-sm" />
               {isSidebarOpen && <span className="text-primary">BMV Docs</span>}
             </a>
             <Button
@@ -174,19 +169,24 @@ export default function DashboardPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
-                  <AvatarImage src="" alt="User avatar" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src={user?.image || ""} alt={user?.name || "User avatar"} />
+                  <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.name || "Minha Conta"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Configurações</DropdownMenuItem>
-              <DropdownMenuItem>Suporte</DropdownMenuItem>
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Perfil</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Sair</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/login' })}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sair</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
@@ -208,4 +208,12 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
+  )
 }
