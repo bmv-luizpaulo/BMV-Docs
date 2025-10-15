@@ -1,3 +1,4 @@
+
 import "dotenv/config";
 import NextAuth, { NextAuthOptions, User, Account, Profile } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
@@ -61,17 +62,20 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async signIn({ account, profile }: { account: Account | null; profile?: any }) {
+    async signIn({ account, profile }) {
       if (account?.provider === "google") {
-        if (profile?.email && profile.email.endsWith("@bmv.global")) {
+        // A 'profile' de um provedor OAuth pode ter diferentes formatos.
+        // É mais seguro verificar a propriedade 'email' dentro de um bloco 'any'
+        // para evitar erros de tipo em tempo de compilação.
+        const userProfile = profile as any;
+        if (userProfile?.email && userProfile.email.endsWith("@bmv.global")) {
           return true; // Permite o login
-        } else {
-          // Nega o acesso para outros domínios
-          return false;
         }
+        // Retorna uma URL de erro customizada para o front-end
+        return '/login?error=AccessDenied'; 
       }
-      // Nega o acesso para outros provedores
-      return false;
+      // Nega o acesso para outros provedores ou se algo deu errado
+      return '/login?error=AccessDenied';
     },
     
     async jwt({ token, user, account }): Promise<JWT> {
