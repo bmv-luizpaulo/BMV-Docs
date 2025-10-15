@@ -29,17 +29,22 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, account, profile }) {
+      // Na primeira vez que o usuário faz login, account e profile estão disponíveis
       if (account && profile) {
         token.accessToken = account.access_token
+        // O `sub` é o ID do usuário no provedor (Google)
         token.id = profile.sub
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      // Garante que o objeto user exista
+      if (session.user) {
+        // Adiciona o id do usuário do token para o objeto da sessão
         session.user.id = token.id as string
-        session.accessToken = token.accessToken as string
       }
+      // Adiciona o accessToken à raiz do objeto da sessão
+      session.accessToken = token.accessToken as string
       return session
     },
     async redirect({ url, baseUrl }) {
