@@ -28,16 +28,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Home, ChevronsLeft, Folder, User } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
 
 import { allData } from "@/lib/data";
 import type { Fazenda, Nucleo } from "@/lib/types";
 import DashboardOverview from "@/components/app/dashboard-overview";
 import FarmChecklist from "@/components/app/farm-checklist";
-import AuthGuard from "@/components/auth/auth-guard";
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
   const [selectedFarm, setSelectedFarm] = React.useState<Fazenda | null>(null);
   const [isSidebarOpen, setSidebarOpen] = React.useState(true);
 
@@ -54,7 +51,6 @@ export default function DashboardPage() {
   };
 
   return (
-    <AuthGuard>
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside
         className={`relative flex-col border-r bg-background transition-all duration-300 ${
@@ -178,19 +174,19 @@ export default function DashboardPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
-                  <AvatarImage src={session?.user?.image ?? undefined} alt="User avatar" />
-                  <AvatarFallback>{session?.user?.name?.[0].toUpperCase()}</AvatarFallback>
+                  <AvatarImage src="" alt="User avatar" />
+                  <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{session?.user?.name}</DropdownMenuLabel>
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Configurações</DropdownMenuItem>
               <DropdownMenuItem>Suporte</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()}>Sair</DropdownMenuItem>
+              <DropdownMenuItem>Sair</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
@@ -211,6 +207,5 @@ export default function DashboardPage() {
         </main>
       </div>
     </div>
-    </AuthGuard>
   );
 }
