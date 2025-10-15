@@ -89,7 +89,7 @@ export default function DashboardPage() {
                 {isSidebarOpen && "Dashboard"}
               </Button>
               {isSidebarOpen ? (
-                <Accordion type="multiple" className="w-full">
+                <Accordion type="multiple" className="w-full" defaultValue={allData.nucleos.map(n => n.id)}>
                   {allData.nucleos.map((nucleo) => (
                     <AccordionItem value={nucleo.id} key={nucleo.id}>
                       <AccordionTrigger className="text-base py-3 hover:no-underline">
@@ -108,10 +108,10 @@ export default function DashboardPage() {
                                   ? "secondary"
                                   : "ghost"
                               }
-                              className="w-full justify-start"
+                              className="w-full justify-start font-normal"
                               onClick={() => handleSelectFarm(fazenda)}
                             >
-                              {fazenda.name}
+                              {fazenda.name.replace('Fazenda ', '')}
                             </Button>
                           ))}
                         </div>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                             key={fazenda.id}
                             onClick={() => handleSelectFarm(fazenda)}
                           >
-                            {fazenda.name}
+                            {fazenda.name.replace('Fazenda ', '')}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
