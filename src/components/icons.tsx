@@ -4,20 +4,16 @@ export function BmvLogo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      viewBox="0 0 100 40"
       {...props}
     >
-      <path d="M4 4v16h16V4H4z" fill="hsl(var(--primary) / 0.2)" />
-      <path d="M4 4l16 16" />
-      <path d="M9 20H4V4h5" />
-      <path d="M15 4h5v16h-5" />
-      <path d="M12 12l-3 3" />
-      <path d="M12 12l3-3" />
+      <rect width="100" height="40" rx="20" ry="20" fill="black" />
+      <g fill="white" transform="translate(15, 8) scale(0.6)">
+        <path d="M21.56,31.68V11.28h9.44a5.32,5.32,0,0,1,3.84,1.4,4.8,4.8,0,0,1,1.52,3.72,4.69,4.69,0,0,1-1.52,3.64,5.19,5.19,0,0,1-3.84,1.4H26.04v10.24Zm4.48-15.92h5a1.51,1.51,0,0,0,1.08-.32,1.35,1.35,0,0,0,.44-1,1.33,1.33,0,0,0-.44-1,1.51,1.51,0,0,0-1.08-.32h-5Z" />
+        <path d="M42.49,31.68V11.28h8.4v2.56h-5.84V20h5.36v2.56h-5.36v6.56h6.24v2.56Z" transform="translate(0,0)" />
+        <path d="M53.69,31.68V11.28h8.56a9.6,9.6,0,0,1,6.8,2.4,8.08,8.08,0,0,1,2.56,6.48,8,8,0,0,1-2.56,6.4,9.49,9.49,0,0,1-6.8,2.4Zm5.84-2.56h2.72a6.48,6.48,0,0,0,4.72-1.76,5.3,5.3,0,0,0,1.76-4.24,5.3,5.3,0,0,0-1.76-4.24,6.48,6.48,0,0,0-4.72-1.76h-2.72Z" transform="translate(10,0) scale(0.9)" />
+        <path d="M78.85,11.28l-5.2,20.4h-3.2l-5.2-20.4h3.36l3.6,14.48,3.6-14.48Z" transform="translate(8,0)" />
+      </g>
     </svg>
   );
 }
