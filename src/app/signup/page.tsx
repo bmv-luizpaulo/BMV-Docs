@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { signIn } from "next-auth/react"
+import { useAuth } from "@/firebase/provider"
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,8 +17,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BmvLogo } from "@/components/icons"
 import { Loader2, Chrome, Mail, Lock, User, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function SignUpPage() {
+  const auth = useAuth()
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -27,27 +31,8 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    
-    // Verificar se há erro na URL
-    const urlParams = new URLSearchParams(window.location.search)
-    const errorParam = urlParams.get("error")
-    
-    const errorMessages: { [key: string]: string } = {
-      Configuration: "Erro de configuração no servidor. Verifique as variáveis de ambiente.",
-      AccessDenied: "Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.",
-      Default: "Não foi possível fazer login. Tente novamente mais tarde.",
-    }
-    
-    if (errorParam) {
-      setError(errorMessages[errorParam] || errorMessages.Default)
-    }
-  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -55,7 +40,6 @@ export default function SignUpPage() {
       ...prev,
       [name]: value
     }))
-    // Limpar erros quando o usuário começar a digitar
     if (error) setError(null)
   }
 
@@ -97,36 +81,34 @@ export default function SignUpPage() {
     setError(null)
     
     try {
-      // Simular cadastro (em produção, isso seria uma chamada para sua API)
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
-      })
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      )
       
-      if (response.ok) {
-        setSuccess("Conta criada com sucesso! Redirecionando para login...")
+      // Verificar se o email é @bmv.global
+      if (formData.email.endsWith('@bmv.global')) {
+        setSuccess("Conta criada com sucesso! Redirecionando...")
         setTimeout(() => {
-          // Fazer login automaticamente após cadastro
-          signIn("credentials", {
-            email: formData.email,
-            password: formData.password,
-            callbackUrl: "/",
-          })
+          router.push("/")
         }, 2000)
       } else {
-        const errorData = await response.json()
-        setError(errorData.message || "Erro ao criar conta")
+        // Se não for @bmv.global, deletar a conta e mostrar erro
+        await userCredential.user.delete()
+        setError("Apenas usuários com e-mail @bmv.global podem criar contas.")
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Sign up error", err)
-      setError("Erro ao criar conta. Tente novamente.")
+      if (err.code === 'auth/email-already-in-use') {
+        setError("Este email já está em uso.")
+      } else if (err.code === 'auth/weak-password') {
+        setError("Senha muito fraca. Use pelo menos 6 caracteres.")
+      } else if (err.code === 'auth/invalid-email') {
+        setError("Email inválido.")
+      } else {
+        setError("Erro ao criar conta. Tente novamente.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -134,43 +116,25 @@ export default function SignUpPage() {
 
   const handleGoogleSignUp = async () => {
     setIsLoading(true)
+    setError(null)
+    const provider = new GoogleAuthProvider()
+    
     try {
-      await signIn("google", { callbackUrl: "/" })
-    } catch (err) {
+      const result = await signInWithPopup(auth, provider)
+      const user = result.user
+
+      if (user.email && user.email.endsWith('@bmv.global')) {
+        router.push("/")
+      } else {
+        await auth.signOut()
+        setError("Acesso negado. Apenas usuários com e-mail @bmv.global podem criar contas.")
+      }
+    } catch (err: any) {
       console.error("Google sign up error", err)
-      setError("Erro ao fazer cadastro com Google")
+      setError("Erro ao fazer cadastro com Google. Tente novamente.")
+    } finally {
       setIsLoading(false)
     }
-  }
-
-  // Evita hidratação mismatch
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center space-y-4">
-              <div className="flex justify-center">
-                <BmvLogo className="h-16 w-16 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">
-                  Criar Conta - BMV Docs
-                </CardTitle>
-                <CardDescription className="text-gray-600 mt-2">
-                  Sistema de gestão documental para o Programa BMV
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -204,7 +168,6 @@ export default function SignUpPage() {
               </Alert>
             )}
 
-            {/* Formulário de Cadastro */}
             <form onSubmit={handleEmailSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
@@ -231,7 +194,7 @@ export default function SignUpPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="seu@email.com"
+                    placeholder="seu@bmv.global"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="pl-10"
@@ -308,7 +271,6 @@ export default function SignUpPage() {
               </Button>
             </form>
 
-            {/* Divisor */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -320,7 +282,6 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Botão Google */}
             <Button
               onClick={handleGoogleSignUp}
               disabled={isLoading}
@@ -341,7 +302,6 @@ export default function SignUpPage() {
               )}
             </Button>
 
-            {/* Link para Login */}
             <div className="text-center">
               <p className="text-sm text-gray-500">
                 Já tem uma conta?{" "}
@@ -351,7 +311,6 @@ export default function SignUpPage() {
               </p>
             </div>
 
-            {/* Termos */}
             <div className="text-center">
               <p className="text-xs text-gray-500">
                 Ao criar uma conta, você concorda com nossos{" "}
