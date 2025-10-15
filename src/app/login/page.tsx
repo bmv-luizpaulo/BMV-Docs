@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,20 +13,29 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BmvLogo } from "@/components/icons"
 import { Loader2, Chrome } from "lucide-react"
-import { useSearchParams } from "next/navigation"
 
-function LoginForm() {
+export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const searchParams = useSearchParams()
-  const errorParam = searchParams.get("error")
+  const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
-  const errorMessages: { [key: string]: string } = {
-    Configuration: "Erro de configuração no servidor. Verifique as variáveis de ambiente.",
-    AccessDenied: "Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.",
-    Default: "Não foi possível fazer login. Tente novamente mais tarde.",
-  }
-
-  const error = errorParam ? (errorMessages[errorParam] || errorMessages.Default) : null
+  useEffect(() => {
+    setMounted(true)
+    
+    // Verificar se há erro na URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const errorParam = urlParams.get("error")
+    
+    const errorMessages: { [key: string]: string } = {
+      Configuration: "Erro de configuração no servidor. Verifique as variáveis de ambiente.",
+      AccessDenied: "Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.",
+      Default: "Não foi possível fazer login. Tente novamente mais tarde.",
+    }
+    
+    if (errorParam) {
+      setError(errorMessages[errorParam] || errorMessages.Default)
+    }
+  }, [])
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
@@ -38,6 +47,36 @@ function LoginForm() {
       setIsLoading(false) // Garante que o loading para se o signIn falhar
     }
     // O loading não precisa ser parado aqui se o signIn for bem-sucedido, pois a página será redirecionada.
+  }
+
+  // Evita hidratação mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+        <div className="w-full max-w-md">
+          <Card className="shadow-xl border-0">
+            <CardHeader className="text-center space-y-4">
+              <div className="flex justify-center">
+                <BmvLogo className="h-16 w-16 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-900">
+                  Bem-vindo ao BMV Docs
+                </CardTitle>
+                <CardDescription className="text-gray-600 mt-2">
+                  Sistema de gestão documental para o Programa BMV
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -101,38 +140,5 @@ function LoginForm() {
         </Card>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center space-y-4">
-              <div className="flex justify-center">
-                <BmvLogo className="h-16 w-16 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">
-                  Bem-vindo ao BMV Docs
-                </CardTitle>
-                <CardDescription className="text-gray-600 mt-2">
-                  Sistema de gestão documental para o Programa BMV
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
   )
 }
