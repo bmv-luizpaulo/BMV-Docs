@@ -1,4 +1,5 @@
-import NextAuth, { NextAuthOptions, User, Account } from "next-auth"
+import "dotenv/config";
+import NextAuth, { NextAuthOptions, User, Account, Profile } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import { JWT } from "next-auth/jwt"
 
@@ -60,19 +61,17 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async signIn({ account, profile }) {
+    async signIn({ account, profile }: { account: Account | null; profile?: any }) {
       if (account?.provider === "google") {
-        // Verifica se o perfil e o email existem, e se o email termina com @bmv.global
         if (profile?.email && profile.email.endsWith("@bmv.global")) {
-          return true // Permite o login
+          return true; // Permite o login
         } else {
-          // Nega o acesso para outros domínios ou se o email não estiver disponível
-          // Pode ser útil redirecionar para uma página de erro customizada aqui
-          return false 
+          // Nega o acesso para outros domínios
+          return false;
         }
       }
-      // Nega o acesso para outros provedores que não sejam "google"
-      return false
+      // Nega o acesso para outros provedores
+      return false;
     },
     
     async jwt({ token, user, account }): Promise<JWT> {
