@@ -8,15 +8,61 @@ export type StatusInfo = {
   icon: LucideIcon;
 };
 
+export type DocumentoCategory = 
+  | 'Coletivo' 
+  | 'Individual' 
+  | 'Adesão' 
+  | 'Posse_Dominio' 
+  | 'Aceite_Representacao' 
+  | 'Transferencia' 
+  | 'Autorizacao' 
+  | 'Diversos';
+
+export type DocumentoSubcategory = 
+  // Coletivos
+  | 'Elegibilidade'
+  | 'Legitimacao'
+  | 'Inventario'
+  | 'Quantificacao'
+  | 'Linha_Base'
+  | 'Concepcao_Projeto'
+  | 'Validacao'
+  | 'Verificacao'
+  | 'Certificacao'
+  | 'Registro_CPR'
+  | 'Custodia_SKR'
+  | 'Transferencias'
+  | 'Emissao_Certificado'
+  | 'Monitoramento'
+  | 'Reemissao_Certificado'
+  // Individuais
+  | 'CAR_Relatorio'
+  | 'PAPA'
+  | 'Documentos_Pessoais'
+  | 'Documentos_Propriedade'
+  | 'Financeiro'
+  // Outros
+  | 'TCA'
+  | 'DPD'
+  | 'TAR'
+  | 'Transferencia_Direitos'
+  | 'Autorizacoes'
+  | 'Diversos';
+
 export type Documento = {
   id: string;
   name: string;
-  type: 'Imóvel' | 'Pessoa Física' | 'Pessoa Jurídica' | 'Procuração';
+  category: DocumentoCategory;
+  subcategory: DocumentoSubcategory;
   status: DocumentoStatus;
   dueDate?: string;
   lastUpdated: string;
   notes?: string;
   fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  uploadedBy?: string;
+  workflowStep?: number; // Para documentos coletivos que seguem fluxo sequencial
 };
 
 export type Produtor = {

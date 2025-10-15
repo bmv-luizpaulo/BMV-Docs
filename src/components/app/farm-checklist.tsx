@@ -57,10 +57,10 @@ export default function FarmChecklist({ farm, onBack }: FarmChecklistProps) {
     );
   };
 
-  const docsByType = documents.reduce((acc, doc) => {
-    (acc[doc.type] = acc[doc.type] || []).push(doc);
+  const docsByCategory = documents.reduce((acc, doc) => {
+    (acc[doc.category] = acc[doc.category] || []).push(doc);
     return acc;
-  }, {} as Record<Documento['type'], Documento[]>);
+  }, {} as Record<Documento['category'], Documento[]>);
 
 
   return (
@@ -99,17 +99,18 @@ export default function FarmChecklist({ farm, onBack }: FarmChecklistProps) {
         </CardContent>
       </Card>
       
-      {Object.entries(docsByType).map(([type, docs]) => (
-        <Card key={type}>
+      {Object.entries(docsByCategory).map(([category, docs]) => (
+        <Card key={category}>
           <CardHeader>
-            <CardTitle>{type}</CardTitle>
-            <CardDescription>Checklist de documentos do tipo {type.toLowerCase()}</CardDescription>
+            <CardTitle>{category}</CardTitle>
+            <CardDescription>Checklist de documentos da categoria {category.toLowerCase()}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[60%]">Documento</TableHead>
+                  <TableHead className="w-[40%]">Documento</TableHead>
+                  <TableHead className="w-[20%]">Subcategoria</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Última Atualização</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -122,6 +123,11 @@ export default function FarmChecklist({ farm, onBack }: FarmChecklistProps) {
                   return (
                     <TableRow key={doc.id}>
                       <TableCell className="font-medium">{doc.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          {doc.subcategory.replace(/_/g, ' ')}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={`border ${statusInfo.color}`}>
                           <Icon className="mr-1 h-3 w-3" />

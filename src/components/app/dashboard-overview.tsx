@@ -80,6 +80,16 @@ export default function DashboardOverview() {
       Divergência: docs.filter((d) => d.status === "Divergência").length,
     };
   });
+
+  // Análise por categoria de documentos
+  const docsByCategory = allDocuments.reduce((acc, doc) => {
+    if (!acc[doc.category]) {
+      acc[doc.category] = { total: 0, completo: 0, pendente: 0, incompleto: 0, divergencia: 0 };
+    }
+    acc[doc.category].total++;
+    acc[doc.category][doc.status.toLowerCase().replace('ência', 'encia')]++;
+    return acc;
+  }, {} as Record<string, any>);
   
   const chartConfig = {
       Completo: { label: "Completo", color: "hsl(var(--chart-1))" },
@@ -203,6 +213,96 @@ export default function DashboardOverview() {
                 )})}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="lg:col-span-4">
+          <CardHeader>
+            <CardTitle>Análise por Categoria de Documentos</CardTitle>
+            <CardDescription>
+              Distribuição de documentos por categoria e status.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(docsByCategory).map(([category, stats]) => {
+                const completionRate = ((stats.completo / stats.total) * 100).toFixed(1);
+                return (
+                  <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{category}</h4>
+                        <Badge variant="outline">{stats.total} docs</Badge>
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="default" className="text-xs">
+                          {stats.completo} Completo
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {stats.pendente} Pendente
+                        </Badge>
+                        <Badge variant="destructive" className="text-xs">
+                          {stats.incompleto} Incompleto
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {stats.divergencia} Divergência
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-primary">{completionRate}%</div>
+                      <div className="text-xs text-muted-foreground">Conformidade</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Fluxo de Trabalho</CardTitle>
+            <CardDescription>
+              Progresso dos documentos coletivos no fluxo BMV.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { step: 1, name: 'Elegibilidade', icon: '📋' },
+                { step: 2, name: 'Legitimação', icon: '📄' },
+                { step: 3, name: 'Inventário', icon: '🌳' },
+                { step: 4, name: 'Quantificação', icon: '📊' },
+                { step: 5, name: 'Validação', icon: '✅' },
+                { step: 6, name: 'Verificação', icon: '🔍' },
+                { step: 7, name: 'Certificação', icon: '🏆' }
+              ].map(({ step, name, icon }) => {
+                const docsInStep = allDocuments.filter(d => d.category === 'Coletivo' && d.workflowStep === step);
+                const completedInStep = docsInStep.filter(d => d.status === 'Completo').length;
+                const progress = docsInStep.length > 0 ? (completedInStep / docsInStep.length) * 100 : 0;
+                
+                return (
+                  <div key={step} className="flex items-center gap-3">
+                    <div className="text-2xl">{icon}</div>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{name}</span>
+                        <span className="text-muted-foreground">{completedInStep}/{docsInStep.length}</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2 mt-1">
+                        <div 
+                          className="bg-primary h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -1,9 +1,73 @@
-import type { Nucleo, DocumentoStatus, Documento, Fazenda } from "./types";
+import type { Nucleo, DocumentoStatus, Documento, Fazenda, DocumentoCategory, DocumentoSubcategory } from "./types";
 
-const documentTypes = {
-  imovel: ["Matrícula do Imóvel", "CAR", "CCIR", "Memorial de Georreferenciamento"],
-  pf: ["RG", "CPF", "Comprovante de Endereço", "Certidão de Casamento"],
-  pj: ["Cartão CNPJ", "Ato Constitutivo", "Documentos do Representante Legal"],
+// Estrutura real baseada na análise dos documentos BMV
+const documentCategories: Record<DocumentoCategory, DocumentoSubcategory[]> = {
+  'Coletivo': [
+    'Elegibilidade', 'Legitimacao', 'Inventario', 'Quantificacao', 
+    'Linha_Base', 'Concepcao_Projeto', 'Validacao', 'Verificacao', 
+    'Certificacao', 'Registro_CPR', 'Custodia_SKR', 'Transferencias',
+    'Emissao_Certificado', 'Monitoramento', 'Reemissao_Certificado'
+  ],
+  'Individual': ['CAR_Relatorio', 'PAPA', 'Documentos_Pessoais', 'Documentos_Propriedade', 'Financeiro'],
+  'Adesão': ['TCA'],
+  'Posse_Dominio': ['DPD'],
+  'Aceite_Representacao': ['TAR'],
+  'Transferencia': ['Transferencia_Direitos'],
+  'Autorizacao': ['Autorizacoes'],
+  'Diversos': ['Diversos']
+};
+
+const documentNames: Record<DocumentoSubcategory, string[]> = {
+  // Coletivos
+  'Elegibilidade': [
+    'Livro de registro da abertura do projeto',
+    'Oficio de Solicitação Audiência Pública',
+    'Ata da Audiência Pública',
+    'Lei de Reconhecimento do Programa',
+    'Declaração de Reconhecimento de Programa de Desenvolvimento Sustentável'
+  ],
+  'Legitimacao': [
+    'Estatuto da Associação',
+    'CNPJ da Associação',
+    'Documentos do Presidente',
+    'Documentos da Diretoria',
+    'Atas da Associação',
+    'Contratos e Termos'
+  ],
+  'Inventario': [
+    'Relatório de Inventário Florestal',
+    'Relatório de Análise de Solo',
+    'Relatório de Inventário Florestal 10%'
+  ],
+  'Quantificacao': [
+    'Relatório de Quantificação de Estoques'
+  ],
+  'Linha_Base': ['Documentos de Linha de Base'],
+  'Concepcao_Projeto': ['Documentos de Concepção do Projeto'],
+  'Validacao': ['Relatórios de Validação IDESA', 'Relatórios de Validação UNESP'],
+  'Verificacao': ['Relatórios de Verificação TUV Rheinland'],
+  'Certificacao': ['Certificados', 'Selos'],
+  'Registro_CPR': ['Cédula de Produto Rural', 'Registro de CPR'],
+  'Custodia_SKR': ['Custódias UCS'],
+  'Transferencias': ['Documentos de Transferência'],
+  'Emissao_Certificado': ['Certificados de Títulos'],
+  'Monitoramento': ['Relatórios de Monitoramento'],
+  'Reemissao_Certificado': ['Reemissão de Certificados'],
+  
+  // Individuais
+  'CAR_Relatorio': ['CAR - Relatório de Áreas'],
+  'PAPA': ['Documentos PAPA'],
+  'Documentos_Pessoais': ['RG', 'CPF', 'Comprovante de Endereço', 'Certidão de Casamento'],
+  'Documentos_Propriedade': ['Matrícula do Imóvel', 'CCIR', 'Memorial de Georreferenciamento'],
+  'Financeiro': ['Comprovantes Financeiros', 'Relatórios de Vendas'],
+  
+  // Outros
+  'TCA': ['Termos e Condições de Adesão ao Programa BMV'],
+  'DPD': ['Declaração de Posse e Domínio'],
+  'TAR': ['Termo de Aceite e Representação'],
+  'Transferencia_Direitos': ['Transferência de Direitos Creditórios'],
+  'Autorizacoes': ['Autorizações BMV'],
+  'Diversos': ['Documentos Diversos', 'Comunicados', 'Protocolos']
 };
 
 const statuses: DocumentoStatus[] = ["Completo", "Pendente", "Incompleto", "Divergência"];
@@ -19,52 +83,77 @@ const createDocuments = (farmId: string): Documento[] => {
     let docId = 1;
     const docs: Documento[] = [];
 
-    documentTypes.imovel.forEach(name => {
-        docs.push({ 
-            id: `doc-${farmId}-${docId++}`, 
-            name, 
-            type: 'Imóvel', 
-            status: getRandomStatus(), 
-            lastUpdated: getRandomDate(),
-            dueDate: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
-        });
-    });
-
-    documentTypes.pf.forEach(name => {
-        docs.push({ 
-            id: `doc-${farmId}-${docId++}`, 
-            name, 
-            type: 'Pessoa Física', 
-            status: getRandomStatus(),
-            lastUpdated: getRandomDate(),
-        });
-    });
-
-    if (Math.random() > 0.5) { // 50% chance of being a PJ
-        documentTypes.pj.forEach(name => {
-            docs.push({ 
-                id: `doc-${farmId}-${docId++}`, 
-                name, 
-                type: 'Pessoa Jurídica', 
-                status: getRandomStatus(),
-                lastUpdated: getRandomDate(),
+    // Criar documentos baseados na estrutura real
+    Object.entries(documentCategories).forEach(([category, subcategories]) => {
+        subcategories.forEach(subcategory => {
+            const names = documentNames[subcategory];
+            names.forEach(name => {
+                docs.push({
+                    id: `doc-${farmId}-${docId++}`,
+                    name,
+                    category: category as DocumentoCategory,
+                    subcategory: subcategory as DocumentoSubcategory,
+                    status: getRandomStatus(),
+                    lastUpdated: getRandomDate(),
+                    dueDate: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
+                    fileName: `${name.replace(/\s+/g, '_')}.pdf`,
+                    fileSize: Math.floor(Math.random() * 5000000) + 100000, // 100KB a 5MB
+                    uploadedBy: 'Sistema BMV',
+                    workflowStep: category === 'Coletivo' ? Math.floor(Math.random() * 15) + 1 : undefined
+                });
             });
         });
-    }
+    });
 
     return docs;
 };
 
+// Produtores reais baseados na análise dos documentos
+const produtoresReais = {
+  'n1': [ // Núcleo Xingu
+    'Breno Miranda de Freitas',
+    'Carlos Alberto Guimarães', 
+    'Daniela e Danilo',
+    'Silvio Xavier de Souza'
+  ],
+  'n2': [ // Núcleo Teles Pires
+    'Acacio Massaro Yoshida',
+    'Antonio Fischer',
+    'Bedin Ind de Madeiras Ltda',
+    'Carrenho Administradora de Bens'
+  ],
+  'n3': [ // Núcleo Madeira
+    'Produtor Madeira A',
+    'Produtor Madeira B',
+    'Produtor Madeira C'
+  ],
+  'n4': [ // Núcleo Arinos
+    'Produtor Arinos A',
+    'Produtor Arinos B',
+    'Produtor Arinos C',
+    'Produtor Arinos D',
+    'Produtor Arinos E',
+    'Produtor Arinos F'
+  ]
+};
+
 const createFarms = (nucleoId: string, count: number): Fazenda[] => {
     const farms: Fazenda[] = [];
+    const produtoresNucleo = produtoresReais[nucleoId as keyof typeof produtoresReais] || [];
+    
     for (let i = 1; i <= count; i++) {
         const farmId = `${nucleoId}-faz-${i}`;
+        const produtorNome = produtoresNucleo[i - 1] || `Produtor ${nucleoId.toUpperCase()} ${i}`;
+        
         farms.push({
             id: farmId,
-            name: `Fazenda ${String.fromCharCode(64 + i)}`,
+            name: `Fazenda ${produtorNome}`,
             code: `FZ-${nucleoId.toUpperCase()}-${String(i).padStart(3, '0')}`,
             nucleadorId: `${nucleoId}-nuc-1`,
-            produtores: [{ id: `${farmId}-prod-1`, name: `Produtor ${i}` }],
+            produtores: [{ 
+                id: `${farmId}-prod-1`, 
+                name: produtorNome 
+            }],
             documentos: createDocuments(farmId),
         });
     }
