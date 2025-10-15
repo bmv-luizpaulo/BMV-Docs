@@ -62,11 +62,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === "google") {
+        // Verifica se o perfil e o email existem, e se o email termina com @bmv.global
         if (profile?.email && profile.email.endsWith("@bmv.global")) {
           return true // Permite o login
+        } else {
+          // Nega o acesso para outros domínios ou se o email não estiver disponível
+          // Pode ser útil redirecionar para uma página de erro customizada aqui
+          return false 
         }
       }
-      return false // Nega o acesso para outros domínios ou provedores
+      // Nega o acesso para outros provedores que não sejam "google"
+      return false
     },
     
     async jwt({ token, user, account }): Promise<JWT> {
