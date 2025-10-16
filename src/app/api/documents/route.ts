@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 Query final:', query)
 
     // Criar instância do Drive API com o cliente autenticado específico da requisição
-    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as any })
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as OAuth2Client })
 
     const response = await driveWithAuth.files.list({
       q: query,
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
       description: description || undefined
     }
     
-    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as any })
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as OAuth2Client })
 
     const response = await driveWithAuth.files.create({
       requestBody: metadata,
@@ -193,7 +193,7 @@ export async function PUT(request: NextRequest) {
     if (description !== undefined) updateData.description = description
     if (starred !== undefined) updateData.starred = starred
 
-    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as any })
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as OAuth2Client })
     
     const response = await driveWithAuth.files.update({
       fileId,
@@ -246,7 +246,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID do arquivo é obrigatório' }, { status: 400 })
     }
 
-    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as any })
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client as OAuth2Client })
 
     await driveWithAuth.files.delete({
       fileId
