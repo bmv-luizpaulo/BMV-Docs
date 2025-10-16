@@ -19,7 +19,8 @@ import {
   HardDrive,
   BarChart3,
   History,
-  LayoutDashboard
+  LayoutDashboard,
+  LogOut
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -42,7 +43,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import AuthGuard from '@/components/auth/auth-guard'
-import { useAuth } from '@/firebase/provider'
+import { useGoogleDriveAuth } from '@/hooks/use-google-drive-auth'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
@@ -62,16 +63,12 @@ export default function DashboardLayout({
     { href: '/dashboard/history', icon: History, label: 'Histórico' },
   ]
 
-  const auth = useAuth();
+  const { signOut, user } = useGoogleDriveAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      router.push('/login');
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-    }
+    await signOut();
+    router.push('/logout');
   };
 
   return (
@@ -160,7 +157,7 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.displayName || 'Minha Conta'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/settings">Configurações</Link>
@@ -169,7 +166,10 @@ export default function DashboardLayout({
                   <Link href="/dashboard/support">Suporte</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>Sair</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </header>

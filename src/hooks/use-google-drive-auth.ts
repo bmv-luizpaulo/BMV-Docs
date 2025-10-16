@@ -9,8 +9,9 @@ interface GoogleDriveAuth {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  user: User | null
   authenticate: () => Promise<void>
-  signOut: () => void
+  signOut: () => Promise<void>
 }
 
 export function useGoogleDriveAuth(): GoogleDriveAuth {
@@ -18,14 +19,15 @@ export function useGoogleDriveAuth(): GoogleDriveAuth {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(auth.currentUser);
 
-  // Efeito para lidar com o resultado do redirecionamento de login
   useEffect(() => {
+    // Este efeito lida com o resultado do redirecionamento do login do Google
     const processRedirectResult = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result) {
+          // Credencial obtida com sucesso após o redirecionamento
           const credential = GoogleAuthProvider.credentialFromResult(result);
           if (credential?.accessToken) {
             setAccessToken(credential.accessToken);
@@ -35,29 +37,29 @@ export function useGoogleDriveAuth(): GoogleDriveAuth {
       } catch (err: any) {
         console.error('Erro ao obter resultado do redirect:', err);
         setError('Erro ao processar autenticação via Google.');
+      } finally {
+        // Marcamos o carregamento como concluído apenas após processar o redirect
+        setIsLoading(false);
       }
-      // Apenas definimos loading como false depois de tentar obter o resultado do redirect
-      setIsLoading(false);
     };
-
+    
     processRedirectResult();
-  }, [auth]);
 
-  // Efeito para ouvir mudanças no estado de autenticação do Firebase
-  useEffect(() => {
+    // Este efeito observa as mudanças de estado de autenticação do Firebase
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
-        // Se o usuário faz logout, limpa o token de acesso
         setAccessToken(null);
       }
-      // Não definimos isLoading aqui para esperar o processamento do redirect
+       if(!isLoading) {
+        setIsLoading(false);
+      }
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, isLoading]);
 
-  const authenticate = async () => {
+  const authenticate = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -65,28 +67,28 @@ export function useGoogleDriveAuth(): GoogleDriveAuth {
       // Adicionar escopos necessários para o Google Drive
       provider.addScope('https://www.googleapis.com/auth/drive');
       provider.addScope('https://www.googleapis.com/auth/drive.file');
-      provider.addScope('https://www.googleapis.com/auth/drive.metadata.readonly');
+      provider.addScope('https://www.googleapis.com/auth/drive.readonly');
       
       await signInWithRedirect(auth, provider);
-      // O resultado será processado pelo useEffect que chama `getRedirectResult`
     } catch (err: any) {
       console.error('Erro ao iniciar a autenticação Google Drive:', err);
-      setError('Não foi possível iniciar o processo de autenticação. Tente novamente.');
+      setError('Não foi possível iniciar o processo de autenticação.');
       setIsLoading(false);
     }
-  };
+  }, [auth]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await auth.signOut();
     setUser(null);
     setAccessToken(null);
-  };
+  }, [auth]);
 
   return {
     accessToken,
-    isAuthenticated: !!user && !!accessToken,
+    isAuthenticated: !!user, // A autenticação depende apenas do usuário do Firebase
     isLoading,
     error,
+    user,
     authenticate,
     signOut,
   }

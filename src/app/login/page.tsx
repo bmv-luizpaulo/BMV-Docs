@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useAuth } from "@/firebase/provider";
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button"
@@ -18,9 +18,11 @@ import { BmvLogo } from "@/components/icons"
 import { Loader2, Chrome, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation";
+import { useGoogleDriveAuth } from "@/hooks/use-google-drive-auth";
 
 export default function LoginPage() {
   const auth = useAuth();
+  const { authenticate: authenticateGoogle, error: googleError } = useGoogleDriveAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -52,7 +54,7 @@ export default function LoginPage() {
     
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       console.error("Sign in error", err)
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
@@ -60,28 +62,6 @@ export default function LoginPage() {
       } else {
         setError("Erro ao fazer login. Tente novamente.")
       }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true)
-    setError(null)
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (user.email && user.email.endsWith('@bmv.global')) {
-        router.push("/");
-      } else {
-        await auth.signOut();
-        setError("Acesso negado. Apenas usuários com e-mail @bmv.global podem entrar.");
-      }
-    } catch (err) {
-      console.error("Google sign in error", err)
-      setError("Erro ao fazer login com Google. Tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -106,9 +86,9 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
+            {(error || googleError) && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{error || googleError}</AlertDescription>
               </Alert>
             )}
 
@@ -186,7 +166,7 @@ export default function LoginPage() {
             </div>
 
             <Button
-              onClick={handleGoogleSignIn}
+              onClick={authenticateGoogle}
               disabled={isLoading}
               variant="outline"
               className="w-full h-12 text-base font-medium"
