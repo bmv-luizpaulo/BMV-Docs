@@ -1,6 +1,6 @@
 "use client"
 
-import { useToast } from "@/hooks/use-toast"
+import { useNotifications } from "@/hooks/use-notifications"
 import {
   Toast,
   ToastClose,
@@ -11,17 +11,17 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { notifications } = useNotifications()
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {notifications.map(function ({ id, title, message, action, type, ...props }) {
         return (
-          <Toast key={id} {...props}>
+          <Toast key={id} {...props} variant={type === 'error' ? 'destructive' : 'default'}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
+              {message && (
+                <ToastDescription>{message}</ToastDescription>
               )}
             </div>
             {action}

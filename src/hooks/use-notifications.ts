@@ -1,26 +1,22 @@
 "use client"
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info'
 
-export interface Notification {
+export interface Notification extends ToastProps {
   id: string
   type: NotificationType
-  title: string
-  message?: string
-  duration?: number
-  action?: {
-    label: string
-    onClick: () => void
-  }
+  title: React.ReactNode
+  message?: React.ReactNode
+  action?: ToastActionElement
 }
 
 interface NotificationContextType {
   notifications: Notification[]
-  addNotification: (notification: Omit<Notification, 'id'>) => void
-  removeNotification: (id: string) => void
-  clearAll: () => void
+  showToast: (toast: Omit<Notification, 'id' | 'type'> & { type: NotificationType }) => void
+  dismiss: (id: string) => void
   showSuccess: (title: string, message?: string) => void
   showError: (title: string, message?: string) => void
   showWarning: (title: string, message?: string) => void
@@ -32,60 +28,45 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
-  const removeNotification = useCallback((id: string) => {
+  const showToast = useCallback((toast: Omit<Notification, 'id' | 'type'> & { type: NotificationType }) => {
+    const id = Math.random().toString(36).substr(2, 9)
+    setNotifications((prev) => [{ ...toast, id }, ...prev])
+  }, [])
+
+  const dismiss = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id))
   }, [])
 
-  const addNotification = useCallback(
-    (notification: Omit<Notification, 'id'>) => {
-      const id = Math.random().toString(36).substr(2, 9)
-      const newNotification = { ...notification, id }
-      
-      setNotifications((prev) => [...prev, newNotification])
-
-      const duration = notification.duration || 5000
-      setTimeout(() => {
-        removeNotification(id)
-      }, duration)
-    },
-    [removeNotification]
-  )
-
-  const clearAll = useCallback(() => {
-    setNotifications([])
-  }, [])
-
   const showSuccess = useCallback((title: string, message?: string) => {
-    addNotification({ type: 'success', title, message })
-  }, [addNotification])
+    showToast({ type: 'success', title, message })
+  }, [showToast])
 
   const showError = useCallback((title: string, message?: string) => {
-    addNotification({ type: 'error', title, message })
-  }, [addNotification])
+    showToast({ type: 'error', title, message })
+  }, [showToast])
 
   const showWarning = useCallback((title: string, message?: string) => {
-    addNotification({ type: 'warning', title, message })
-  }, [addNotification])
+    showToast({ type: 'warning', title, message })
+  }, [showToast])
 
   const showInfo = useCallback((title: string, message?: string) => {
-    addNotification({ type: 'info', title, message })
-  }, [addNotification])
+    showToast({ type: 'info', title, message })
+  }, [showToast])
 
   const contextValue: NotificationContextType = {
     notifications,
-    addNotification,
-    removeNotification,
-    clearAll,
+    showToast,
+    dismiss,
     showSuccess,
     showError,
     showWarning,
     showInfo
   }
 
-  return React.createElement(
-    NotificationContext.Provider,
-    { value: contextValue },
-    children
+  return (
+    <NotificationContext.Provider value={contextValue}>
+      {children}
+    </NotificationContext.Provider>
   )
 }
 

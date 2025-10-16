@@ -127,7 +127,7 @@ const ChartsSection = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig}>
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
             <BarChart data={stats.chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />

@@ -294,14 +294,14 @@ export function AdvancedTemplateEditor() {
       showSuccess('Template Atualizado', `Template "${currentTemplate.name}" foi atualizado com sucesso`);
     } else {
       // Criar novo template
-      const newTemplate = {
+      const newTemplateWithId = {
         ...templateToSave,
         id: Math.random().toString(36).substr(2, 9),
         createdAt: new Date().toISOString(),
         version: 1
       };
-      setTemplates(prev => [...prev, newTemplate]);
-      setCurrentTemplate(newTemplate);
+      setTemplates(prev => [...prev, newTemplateWithId]);
+      setCurrentTemplate(newTemplateWithId);
       showSuccess('Template Criado', `Template "${currentTemplate.name}" foi criado com sucesso`);
     }
 

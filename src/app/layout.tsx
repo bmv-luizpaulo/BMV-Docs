@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { Providers } from './providers';
 
@@ -27,7 +26,6 @@ export default function RootLayout({
       <body className={cn('font-body antialiased', inter.variable)}>
         <Providers>
           {children}
-          <Toaster />
         </Providers>
       </body>
     </html>

@@ -263,7 +263,7 @@ export function TemplateImportExportSystem() {
         showSuccess('Importação Concluída', `${successCount} de ${importedTemplates.length} templates importados com sucesso`);
 
       } catch (error) {
-        showError('Erro na Importação', `Erro ao processar arquivo: ${error}`);
+        showError('Erro na Importação', `Erro ao processar arquivo: ${error instanceof Error ? error.message : String(error)}`);
       }
     };
 

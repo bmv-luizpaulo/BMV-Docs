@@ -71,19 +71,16 @@ O Sistema de Templates é uma solução completa para criação, edição, aplic
 ## Estrutura de Dados
 
 ### Template Básico
-```typescript
-interface Template {
+`interface Template {
   id: string;
   name: string;
   content: string;
   createdAt: string;
   updatedAt: string;
-}
-```
+}`
 
 ### Template Avançado
-```typescript
-interface AdvancedTemplate {
+`interface AdvancedTemplate {
   id: string;
   name: string;
   content: string;
@@ -96,24 +93,20 @@ interface AdvancedTemplate {
   version: number;
   isPublic: boolean;
   description: string;
-}
-```
+}`
 
 ### Variável de Template
-```typescript
-interface TemplateVariable {
+`interface TemplateVariable {
   id: string;
   name: string;
   type: 'text' | 'number' | 'date' | 'email' | 'url';
   placeholder: string;
   required: boolean;
   defaultValue?: string;
-}
-```
+}`
 
 ### Estilo de Template
-```typescript
-interface TemplateStyle {
+`interface TemplateStyle {
   fontFamily: string;
   fontSize: number;
   fontWeight: 'normal' | 'bold';
@@ -123,8 +116,7 @@ interface TemplateStyle {
   lineHeight: number;
   margin: number;
   padding: number;
-}
-```
+}`
 
 ## Como Usar
 

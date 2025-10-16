@@ -212,21 +212,27 @@ _________________
       return;
     }
 
-    generateContent();
+    let content = selectedTemplate.content;
+    selectedTemplate.variables.forEach(variable => {
+        const value = variableValues[variable.name] || variable.defaultValue || '';
+        const placeholder = new RegExp(`{{${variable.name}}}`, 'g');
+        content = content.replace(placeholder, value);
+    });
 
     const appliedTemplate: AppliedTemplate = {
       id: Math.random().toString(36).substr(2, 9),
       templateId: selectedTemplate.id,
       templateName: selectedTemplate.name,
-      content: generatedContent,
+      content: content,
       variables: { ...variableValues },
       appliedAt: new Date().toISOString(),
       fileName: fileName || `${selectedTemplate.name}_${new Date().toISOString().split('T')[0]}.txt`
     };
-
+    
+    setGeneratedContent(content);
     setAppliedTemplates(prev => [appliedTemplate, ...prev]);
     showSuccess('Template Aplicado', `Template "${selectedTemplate.name}" foi aplicado com sucesso`);
-  }, [selectedTemplate, variableValues, generatedContent, fileName, generateContent, showSuccess, showError]);
+  }, [selectedTemplate, variableValues, fileName, showSuccess, showError]);
 
   // Copiar conteúdo
   const copyContent = useCallback(() => {
