@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { allData } from "@/lib/data";
+import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import type { DocumentoStatus } from "@/lib/types";
 import {
   AlertTriangle,
@@ -29,6 +29,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { DashboardSkeleton } from "@/components/ui/loading-skeletons";
+import { Suspense } from "react";
 
 const statusColors: Record<DocumentoStatus, string> = {
   Completo: "bg-green-500",
