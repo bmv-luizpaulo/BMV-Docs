@@ -37,5 +37,13 @@ FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 FIREBASE_APP_ID=your-app-id
 
+# Google AI (Gemini) Configuration
+# IMPORTANTE: Obtenha esta chave no Google AI Studio
+# 1. Acesse: https://aistudio.google.com/
+# 2. Clique em "Get API key" e copie a chave.
+# 3. Adicione esta chave também nas Environment Variables do seu projeto na Vercel.
+GEMINI_API_KEY=your-gemini-api-key-here
+
+
 # Ambiente
 NODE_ENV=development
