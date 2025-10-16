@@ -82,10 +82,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     showInfo
   }
 
-  return (
-    <NotificationContext.Provider value={contextValue}>
-      {children}
-    </NotificationContext.Provider>
+  return React.createElement(
+    NotificationContext.Provider,
+    { value: contextValue },
+    children
   )
 }
 
@@ -97,16 +97,16 @@ export function useNotifications() {
   return context
 }
 
-// Hook para notificações específicas do sistema
+// Hook para notificacoes especificas do sistema
 export function useSystemNotifications() {
   const { showSuccess, showError, showWarning, showInfo } = useNotifications()
 
   const notifyDocumentUploaded = useCallback((fileName: string) => {
-    showSuccess('Upload Concluído', `O arquivo "${fileName}" foi enviado com sucesso`)
+    showSuccess('Upload Concluido', `O arquivo "${fileName}" foi enviado com sucesso`)
   }, [showSuccess])
 
   const notifyDocumentDeleted = useCallback((fileName: string) => {
-    showSuccess('Documento Excluído', `O arquivo "${fileName}" foi removido`)
+    showSuccess('Documento Excluido', `O arquivo "${fileName}" foi removido`)
   }, [showSuccess])
 
   const notifyFolderCreated = useCallback((folderName: string) => {
@@ -114,7 +114,7 @@ export function useSystemNotifications() {
   }, [showSuccess])
 
   const notifySearchCompleted = useCallback((count: number) => {
-    showInfo('Busca Concluída', `${count} documento(s) encontrado(s)`)
+    showInfo('Busca Concluida', `${count} documento(s) encontrado(s)`)
   }, [showInfo])
 
   const notifyCacheCleared = useCallback(() => {
@@ -122,19 +122,19 @@ export function useSystemNotifications() {
   }, [showInfo])
 
   const notifyAuthError = useCallback((message: string) => {
-    showError('Erro de Autenticação', message)
+    showError('Erro de Autenticacao', message)
   }, [showError])
 
   const notifyNetworkError = useCallback(() => {
-    showError('Erro de Conexão', 'Verifique sua conexão com a internet')
+    showError('Erro de Conexao', 'Verifique sua conexao com a internet')
   }, [showError])
 
   const notifyValidationError = useCallback((message: string) => {
-    showWarning('Erro de Validação', message)
+    showWarning('Erro de Validacao', message)
   }, [showWarning])
 
   const notifyPermissionDenied = useCallback(() => {
-    showError('Permissão Negada', 'Você não tem permissão para realizar esta ação')
+    showError('Permissao Negada', 'Voce nao tem permissao para realizar esta acao')
   }, [showError])
 
   const notifyFileTooLarge = useCallback((maxSize: string) => {
@@ -142,7 +142,7 @@ export function useSystemNotifications() {
   }, [showError])
 
   const notifyUnsupportedFileType = useCallback((fileType: string) => {
-    showError('Tipo de Arquivo Não Suportado', `O tipo "${fileType}" não é suportado`)
+    showError('Tipo de Arquivo Nao Suportado', `O tipo "${fileType}" nao e suportado`)
   }, [showError])
 
   return {
