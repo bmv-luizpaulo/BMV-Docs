@@ -34,28 +34,30 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
   }, [])
 
-  const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9)
-    const newNotification = { ...notification, id }
-    
-    setNotifications(prev => [...prev, newNotification])
+  const addNotification = useCallback(
+    (notification: Omit<Notification, 'id'>) => {
+      const id = Math.random().toString(36).substr(2, 9)
+      const newNotification = { ...notification, id }
+      
+      setNotifications((prev) => [...prev, newNotification]);
 
-    // Auto-remove após duração especificada
-    const duration = notification.duration || 5000
-    setTimeout(() => {
-      removeNotification(id)
-    }, duration)
+      toast({
+        title: notification.title,
+        description: notification.message,
+        variant: notification.type === 'error' ? 'destructive' : 'default',
+        duration: notification.duration || 5000,
+      });
 
-    // Mostrar toast também
-    toast({
-      title: notification.title,
-      description: notification.message,
-      variant: notification.type === 'error' ? 'destructive' : 'default'
-    })
-  }, [removeNotification])
+      const duration = notification.duration || 5000;
+      setTimeout(() => {
+        removeNotification(id);
+      }, duration);
+    },
+    [removeNotification]
+  );
 
   const clearAll = useCallback(() => {
     setNotifications([])
@@ -77,17 +79,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     addNotification({ type: 'info', title, message })
   }, [addNotification])
 
+  const contextValue: NotificationContextType = {
+    notifications,
+    addNotification,
+    removeNotification,
+    clearAll,
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo
+  }
+
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      addNotification,
-      removeNotification,
-      clearAll,
-      showSuccess,
-      showError,
-      showWarning,
-      showInfo
-    }}>
+    <NotificationContext.Provider value={contextValue}>
       {children}
     </NotificationContext.Provider>
   )
