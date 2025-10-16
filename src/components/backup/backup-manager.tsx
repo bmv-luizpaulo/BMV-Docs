@@ -52,7 +52,8 @@ import {
   AlertTriangle,
   XCircle,
   FileText,
-  Folder
+  Folder,
+  Loader2
 } from 'lucide-react'
 import { DriveDocument, DriveFolder } from '@/lib/google-drive'
 import { useSystemNotifications } from '@/hooks/use-notifications'
@@ -121,20 +122,27 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
     compression: true,
     encryption: false
   })
+  const [isLoading, setIsLoading] = useState(true);
 
   const { showSuccess, showError, showInfo } = useSystemNotifications()
 
   // Carregar configurações do localStorage
   useEffect(() => {
-    const savedConfigs = localStorage.getItem('bmv-backup-configs')
-    const savedJobs = localStorage.getItem('bmv-backup-jobs')
-    
-    if (savedConfigs) {
-      setBackupConfigs(JSON.parse(savedConfigs))
-    }
-    
-    if (savedJobs) {
-      setBackupJobs(JSON.parse(savedJobs))
+    try {
+      const savedConfigs = localStorage.getItem('bmv-backup-configs')
+      const savedJobs = localStorage.getItem('bmv-backup-jobs')
+      
+      if (savedConfigs) {
+        setBackupConfigs(JSON.parse(savedConfigs))
+      }
+      
+      if (savedJobs) {
+        setBackupJobs(JSON.parse(savedJobs))
+      }
+    } catch (error) {
+      console.error("Failed to load backup data from localStorage", error);
+    } finally {
+      setIsLoading(false);
     }
   }, [])
 
@@ -369,6 +377,14 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
       default:
         return 'bg-yellow-100 text-yellow-800'
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (
@@ -697,3 +713,5 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
     </div>
   )
 }
+
+    

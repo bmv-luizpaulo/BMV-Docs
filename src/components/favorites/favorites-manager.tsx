@@ -30,7 +30,8 @@ import {
   Search,
   Filter,
   SortAsc,
-  SortDesc
+  SortDesc,
+  Loader2
 } from 'lucide-react'
 import { DriveDocument, DriveFolder } from '@/lib/google-drive'
 import { useSystemNotifications } from '@/hooks/use-notifications'
@@ -61,14 +62,21 @@ export default function FavoritesManager({ accessToken, documents, folders }: Fa
   const [sortBy, setSortBy] = useState<'name' | 'addedAt' | 'accessCount' | 'lastAccessed'>('addedAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [filterType, setFilterType] = useState<'all' | 'document' | 'folder'>('all')
+  const [isLoading, setIsLoading] = useState(true);
   
   const { showSuccess, showError } = useSystemNotifications()
 
   // Carregar favoritos do localStorage
   useEffect(() => {
-    const savedFavorites = localStorage.getItem('bmv-favorites')
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
+    try {
+        const savedFavorites = localStorage.getItem('bmv-favorites');
+        if (savedFavorites) {
+            setFavorites(JSON.parse(savedFavorites));
+        }
+    } catch (error) {
+        console.error("Failed to load favorites from localStorage", error);
+    } finally {
+        setIsLoading(false);
     }
   }, [])
 
@@ -201,6 +209,14 @@ export default function FavoritesManager({ accessToken, documents, folders }: Fa
     if (item.mimeType?.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />
     
     return <FileText className="h-4 w-4" />
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (
@@ -443,3 +459,5 @@ export default function FavoritesManager({ accessToken, documents, folders }: Fa
     </div>
   )
 }
+
+    

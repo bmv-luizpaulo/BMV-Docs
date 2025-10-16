@@ -34,7 +34,8 @@ import {
   Calendar,
   Clock,
   User,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react'
 
 interface ActivityLog {
@@ -64,20 +65,27 @@ export default function ActivityHistory({ accessToken }: ActivityHistoryProps) {
     start: '',
     end: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Carregar atividades do localStorage
   useEffect(() => {
-    const savedActivities = localStorage.getItem('bmv-activity-log')
-    if (savedActivities) {
-      const parsedActivities = JSON.parse(savedActivities)
-      setActivities(parsedActivities)
-      setFilteredActivities(parsedActivities)
+    try {
+      const savedActivities = localStorage.getItem('bmv-activity-log')
+      if (savedActivities) {
+        const parsedActivities = JSON.parse(savedActivities)
+        setActivities(parsedActivities)
+        setFilteredActivities(parsedActivities)
+      }
+    } catch (error) {
+      console.error("Failed to load activities from localStorage", error)
+    } finally {
+      setIsLoading(false)
     }
   }, [])
 
   // Filtrar atividades
   useEffect(() => {
+    if (isLoading) return;
     let filtered = activities
 
     // Filtro por busca
@@ -104,7 +112,7 @@ export default function ActivityHistory({ accessToken }: ActivityHistoryProps) {
     }
 
     setFilteredActivities(filtered)
-  }, [activities, searchQuery, filterAction, filterDateRange])
+  }, [activities, searchQuery, filterAction, filterDateRange, isLoading])
 
   // Adicionar nova atividade
   const addActivity = useCallback((activity: Omit<ActivityLog, 'id' | 'timestamp'>) => {
@@ -205,6 +213,14 @@ export default function ActivityHistory({ accessToken }: ActivityHistoryProps) {
   }
 
   const stats = getStats()
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -434,3 +450,5 @@ export function useActivityHistory() {
 
   return { addActivity }
 }
+
+    
