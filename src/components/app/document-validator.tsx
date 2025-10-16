@@ -114,14 +114,13 @@ export default function DocumentValidator({ accessToken }: DocumentValidatorProp
 
   const handleSaveToDrive = async () => {
     if (!file || !selectedFolder) {
-      toast({ variant: 'destructive', title: "Erro", description: "Categoria de destino necessária para salvar." });
-      return;
+        toast({ variant: 'destructive', title: "Erro", description: "Categoria de destino necessária para salvar." });
+        return;
     }
 
     setIsSaving(true);
     
-    // Find the folder ID from the global state based on the selected folder name
-    const targetFolder = folders.find(f => f.name === selectedFolder.replace(/_/g, ' '));
+    const targetFolder = folders.find(f => f.name.replace(/ /g, '_') === selectedFolder);
     const targetFolderId = targetFolder ? targetFolder.id : 'root';
     
     console.log(`Tentando salvar na pasta: ${selectedFolder} (ID: ${targetFolderId})`);
@@ -147,7 +146,7 @@ export default function DocumentValidator({ accessToken }: DocumentValidatorProp
       const data = await response.json();
 
       if (data.success) {
-        toast({ title: "Documento Salvo!", description: `"${file.name}" foi salvo com sucesso na pasta "${selectedFolder}".` });
+        toast({ title: "Documento Salvo!", description: `"${file.name}" foi salvo com sucesso na pasta "${selectedFolder.replace(/_/g, ' ')}".` });
         apiCache.invalidateDocuments(targetFolderId);
         resetState();
       } else {
