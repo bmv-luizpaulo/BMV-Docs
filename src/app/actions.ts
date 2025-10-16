@@ -5,9 +5,6 @@ import { aiDocumentValidation, type AIDocumentValidationInput } from "@/ai/flows
 export async function validateDocument(
   input: AIDocumentValidationInput
 ) {
-  // Add a small delay to simulate network latency and show loading state
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
   try {
     const result = await aiDocumentValidation(input);
     return result;
