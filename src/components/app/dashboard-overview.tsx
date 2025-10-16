@@ -42,8 +42,7 @@ import FavoritesManager from '@/components/favorites/favorites-manager';
 import ActivityHistory from '@/components/activity/activity-history';
 import TagManager from '@/components/tags/tag-manager';
 import BackupManager from '@/components/backup/backup-manager';
-import AnalyticsDashboard from '@/components/analytics/analytics-dashboard';
-import TemplateManager from '@/components/templates/template-manager';
+import { TemplateSystem } from '@/components/templates/template-system';
 import DocumentManager from "@/components/documents/document-manager-optimized";
 
 const statusColors: Record<DocumentoStatus, string> = {
@@ -304,7 +303,7 @@ export default function DashboardOverview() {
           <BackupManager accessToken={accessToken} documents={documents} folders={folders} />
       </TabsContent>
       <TabsContent value="templates">
-          <TemplateManager accessToken={accessToken} documents={documents} folders={folders} />
+          <TemplateSystem />
       </TabsContent>
     </Tabs>
   )
