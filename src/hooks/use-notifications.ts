@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info'
 
@@ -41,15 +41,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const id = Math.random().toString(36).substr(2, 9)
       const newNotification = { ...notification, id }
       
-      setNotifications((prev) => [...prev, newNotification]);
+      setNotifications((prev) => [...prev, newNotification])
 
-      const duration = notification.duration || 5000;
+      const duration = notification.duration || 5000
       setTimeout(() => {
-        removeNotification(id);
-      }, duration);
+        removeNotification(id)
+      }, duration)
     },
     [removeNotification]
-  );
+  )
 
   const clearAll = useCallback(() => {
     setNotifications([])
