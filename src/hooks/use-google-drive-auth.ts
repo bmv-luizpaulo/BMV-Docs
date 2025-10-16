@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/firebase/provider'
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo } from 'firebase/auth'
+import { onAuthStateChanged, signInWithRedirect, getRedirectResult, GoogleAuthProvider, User } from 'firebase/auth'
 
 interface GoogleDriveAuth {
   accessToken: string | null
@@ -19,73 +19,62 @@ export function useGoogleDriveAuth(): GoogleDriveAuth {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Função para extrair e salvar o token
-  const handleAuthSuccess = useCallback((user) => {
-    if (user && user.providerData) {
-      const googleProviderData = user.providerData.find(
-        (provider: any) => provider.providerId === GoogleAuthProvider.PROVIDER_ID
-      );
-      
-      // Tenta pegar o token do localStorage primeiro, se disponível
-      const storedToken = localStorage.getItem('google_drive_token');
-      if (storedToken) {
-          setAccessToken(storedToken);
-          setIsLoading(false);
-          return;
-      }
-    }
-    // Se não houver token, força o re-login para obter os escopos
-    setError("Token de acesso do Google Drive não encontrado. Por favor, autorize novamente.");
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        handleAuthSuccess(user);
-      } else {
-        setIsLoading(false);
-        setAccessToken(null);
-        localStorage.removeItem('google_drive_token');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [auth, handleAuthSuccess]);
-
-  const authenticate = async () => {
-    setIsLoading(true);
-    setError(null);
-  
+  const handleAuthResult = useCallback(async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('https://www.googleapis.com/auth/drive');
-      provider.addScope('https://www.googleapis.com/auth/drive.file');
-      provider.addScope('https://www.googleapis.com/auth/drive.metadata');
-  
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-  
-      if (credential?.accessToken) {
-        const token = credential.accessToken;
-        setAccessToken(token);
-        localStorage.setItem('google_drive_token', token);
-        setError(null);
+      const result = await getRedirectResult(auth);
+      if (result) {
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential?.accessToken) {
+          const token = credential.accessToken;
+          setAccessToken(token);
+          localStorage.setItem('google_drive_token', token);
+          setError(null);
+        } else {
+          throw new Error("Não foi possível obter o token de acesso do Google após o redirect.");
+        }
       } else {
-        throw new Error("Não foi possível obter o token de acesso do Google.");
+        // Se não houver resultado de redirect, checa se já existe um token salvo
+        const storedToken = localStorage.getItem('google_drive_token');
+        if (storedToken) {
+          setAccessToken(storedToken);
+        }
       }
     } catch (err: any) {
-      console.error('Erro na autenticação Google Drive:', err);
+      console.error('Erro ao processar o resultado do redirect:', err);
       let errorMessage = 'Erro ao autenticar com Google Drive. Tente novamente.';
-      if (err.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'A janela de autenticação foi fechada antes da conclusão.';
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        errorMessage = 'Múltiplas tentativas de autenticação. Por favor, tente novamente.';
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = 'Já existe uma conta com este e-mail, mas com um método de login diferente.';
       }
       setError(errorMessage);
       setAccessToken(null);
       localStorage.removeItem('google_drive_token');
     } finally {
+      setIsLoading(false);
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('google_drive_token');
+    if (storedToken) {
+      setAccessToken(storedToken);
+      setIsLoading(false);
+    } else {
+      handleAuthResult();
+    }
+  }, [handleAuthResult]);
+
+  const authenticate = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/drive');
+      provider.addScope('https://www.googleapis.com/auth/drive.file');
+      provider.addScope('https://www.googleapis.com/auth/drive.metadata');
+      await signInWithRedirect(auth, provider);
+    } catch (err: any) {
+      console.error('Erro ao iniciar a autenticação Google Drive:', err);
+      setError('Não foi possível iniciar o processo de autenticação. Tente novamente.');
       setIsLoading(false);
     }
   };
