@@ -1,11 +1,11 @@
 'use server';
 
 /**
- * @fileOverview An AI-powered document validation flow.
+ * @fileOverview An AI-powered document validation and organization flow.
  *
- * - aiDocumentValidation - A function that validates if a given document is consistent, readable, and complete.
- * - AIDocumentValidationInput - The input type for the aiDocumentValidation function.
- * - AIDocumentValidationOutput - The return type for the aiDocumentValidation function.
+ * - aiDocumentValidation - A function that validates a document and suggests organization.
+ * - AIDocumentValidationInput - The input type for the function.
+ * - AIDocumentValidationOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -25,6 +25,8 @@ const AIDocumentValidationOutputSchema = z.object({
   isReadable: z.boolean().describe('Whether or not the document is readable.'),
   isComplete: z.boolean().describe('Whether or not the document is complete.'),
   validationDetails: z.string().describe('Details about the validation results.'),
+  suggestedTags: z.array(z.string()).describe('A list of suggested tags for the document based on its content.'),
+  suggestedCategory: z.string().describe('The most relevant subcategory for the document.'),
 });
 export type AIDocumentValidationOutput = z.infer<typeof AIDocumentValidationOutputSchema>;
 
@@ -36,21 +38,20 @@ const prompt = ai.definePrompt({
   name: 'aiDocumentValidationPrompt',
   input: {schema: AIDocumentValidationInputSchema},
   output: {schema: AIDocumentValidationOutputSchema},
-  prompt: `You are an AI assistant that validates documents. You will determine if the document is consistent, readable, and complete.
+  prompt: `You are an AI assistant that validates documents and suggests how to organize them.
+You will determine if the document is consistent, readable, and complete.
 
-  Document: {{media url=documentDataUri}}
-  \nDetermine:
-- Whether the document is consistent
-- Whether the document is readable
-- Whether the document is complete
+Based on the document's content, you will also suggest a list of relevant tags (like "contrato", "financeiro", "imóvel") and the single most appropriate subcategory from the following list:
+['Elegibilidade', 'Legitimacao', 'Inventario', 'Quantificacao', 'Linha_Base', 'Concepcao_Projeto', 'Validacao', 'Verificacao', 'Certificacao', 'Registro_CPR', 'Custodia_SKR', 'Transferencias', 'Emissao_Certificado', 'Monitoramento', 'Reemissao_Certificado', 'CAR_Relatorio', 'PAPA', 'Documentos_Pessoais', 'Documentos_Propriedade', 'Financeiro', 'TCA', 'DPD', 'TAR', 'Transferencia_Direitos', 'Autorizacoes', 'Diversos']
 
-Output in JSON format:
-{
-  "isConsistent": true or false,
-  "isReadable": true or false,
-  "isComplete": true or false,
-  "validationDetails": "Details about the validation results."
-}
+Document: {{media url=documentDataUri}}
+
+Determine:
+- Whether the document is consistent, readable, and complete.
+- A list of suggested tags (suggestedTags).
+- The most relevant subcategory (suggestedCategory).
+
+Output in JSON format.
 `,
 });
 

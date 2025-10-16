@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Documento, DocumentoStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { validateDocument } from "@/app/actions";
-import { Loader2, UploadCloud, CheckCircle, XCircle, File as FileIcon, Trash2 } from "lucide-react";
+import { Loader2, UploadCloud, CheckCircle, XCircle, File as FileIcon, Trash2, Sparkles, Tag } from "lucide-react";
 import type { AIDocumentValidationOutput } from "@/ai/flows/ai-document-validation";
 
 interface DocumentValidatorDialogProps {
@@ -99,7 +99,7 @@ export function DocumentValidatorDialog({
       setAiResult(result);
       toast({
         title: "Análise de IA concluída",
-        description: "Verifique os resultados abaixo.",
+        description: "A IA analisou o documento e forneceu algumas sugestões.",
       });
     } catch (error) {
       console.error(error);
@@ -225,7 +225,10 @@ export function DocumentValidatorDialog({
                   Analisando...
                 </>
               ) : (
-                "Analisar com IA"
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Analisar com IA
+                </>
               )}
             </Button>
           </div>
@@ -233,21 +236,47 @@ export function DocumentValidatorDialog({
           {aiResult && (
             <div className="space-y-4 rounded-lg border bg-secondary/50 p-4">
                 <h3 className="font-semibold">Resultados da Análise de IA</h3>
-                <div className="flex space-x-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">Validação:</span>
                     <Badge variant={aiResult.isConsistent ? 'default' : 'destructive'}>
-                        {aiResult.isConsistent ? <CheckCircle className="h-4 w-4 mr-1"/> : <XCircle className="h-4 w-4 mr-1"/>}
+                        {aiResult.isConsistent ? <CheckCircle className="h-3 w-3 mr-1"/> : <XCircle className="h-3 w-3 mr-1"/>}
                         Consistente
                     </Badge>
                     <Badge variant={aiResult.isReadable ? 'default' : 'destructive'}>
-                        {aiResult.isReadable ? <CheckCircle className="h-4 w-4 mr-1"/> : <XCircle className="h-4 w-4 mr-1"/>}
+                        {aiResult.isReadable ? <CheckCircle className="h-3 w-3 mr-1"/> : <XCircle className="h-3 w-3 mr-1"/>}
                         Legível
                     </Badge>
                     <Badge variant={aiResult.isComplete ? 'default' : 'destructive'}>
-                        {aiResult.isComplete ? <CheckCircle className="h-4 w-4 mr-1"/> : <XCircle className="h-4 w-4 mr-1"/>}
+                        {aiResult.isComplete ? <CheckCircle className="h-3 w-3 mr-1"/> : <XCircle className="h-3 w-3 mr-1"/>}
                         Completo
                     </Badge>
+                  </div>
+                   <p className="text-sm text-muted-foreground">{aiResult.validationDetails}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{aiResult.validationDetails}</p>
+                
+                {(aiResult.suggestedTags?.length > 0 || aiResult.suggestedCategory) && <hr/>}
+                
+                {aiResult.suggestedCategory && (
+                  <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Categoria Sugerida:</h4>
+                      <Badge variant="outline">{aiResult.suggestedCategory}</Badge>
+                  </div>
+                )}
+                
+                {aiResult.suggestedTags && aiResult.suggestedTags.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Tags Sugeridas:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {aiResult.suggestedTags.map(tag => (
+                        <Badge key={tag} variant="secondary">
+                          <Tag className="h-3 w-3 mr-1"/>
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
             </div>
           )}
 
