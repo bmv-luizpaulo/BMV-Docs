@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { drive, oauth2Client, createOAuth2ClientWithToken } from '@/lib/google-drive'
+import { apiCache } from '@/lib/api-cache'
 
 // Middleware para verificar autenticação
 async function checkAuth(request: NextRequest) {
@@ -38,6 +39,15 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Parent ID:', parentId)
 
+    // Verificar cache primeiro
+    const cacheKey = apiCache.generateKey('folders', { parentId })
+    const cachedResult = apiCache.get(cacheKey)
+    
+    if (cachedResult) {
+      console.log('✅ Retornando dados do cache')
+      return NextResponse.json(cachedResult)
+    }
+
     const query = `mimeType = 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`
     console.log('🔍 Query final:', query)
 
@@ -53,10 +63,15 @@ export async function GET(request: NextRequest) {
     const folders = response.data.files || []
     console.log('✅ Pastas encontradas:', folders.length)
 
-    return NextResponse.json({
+    const result = {
       success: true,
       folders
-    })
+    }
+
+    // Salvar no cache (5 minutos)
+    apiCache.set(cacheKey, result, 5 * 60 * 1000)
+
+    return NextResponse.json(result)
 
   } catch (error) {
     console.error('❌ Erro ao listar pastas:', error)

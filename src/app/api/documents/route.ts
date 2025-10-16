@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { drive, oauth2Client, DriveDocument, createOAuth2ClientWithToken } from '@/lib/google-drive'
+import { apiCache } from '@/lib/api-cache'
 
 // Middleware para verificar autenticação
 async function checkAuth(request: NextRequest) {
@@ -34,15 +35,24 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url)
-    const folderId = searchParams.get('folderId')
+    const folderId = searchParams.get('folderId') || 'root'
     const mimeType = searchParams.get('mimeType')
     const q = searchParams.get('q') // query de busca
 
     console.log('🔍 Parâmetros:', { folderId, mimeType, q })
 
+    // Verificar cache primeiro
+    const cacheKey = apiCache.generateKey('documents', { folderId, mimeType, q })
+    const cachedResult = apiCache.get(cacheKey)
+    
+    if (cachedResult) {
+      console.log('✅ Retornando dados do cache')
+      return NextResponse.json(cachedResult)
+    }
+
     let query = "trashed = false"
     
-    if (folderId) {
+    if (folderId && folderId !== 'root') {
       query += ` and '${folderId}' in parents`
     }
     
@@ -69,11 +79,16 @@ export async function GET(request: NextRequest) {
     const documents: DriveDocument[] = response.data.files || []
     console.log('✅ Documentos encontrados:', documents.length)
 
-    return NextResponse.json({
+    const result = {
       success: true,
       documents,
       total: documents.length
-    })
+    }
+
+    // Salvar no cache (5 minutos)
+    apiCache.set(cacheKey, result, 5 * 60 * 1000)
+
+    return NextResponse.json(result)
 
   } catch (error) {
     console.error('❌ Erro ao listar documentos:', error)

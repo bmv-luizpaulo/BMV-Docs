@@ -46,313 +46,194 @@ const statusIcons: Record<DocumentoStatus, React.ElementType> = {
   Divergência: AlertTriangle,
 };
 
+// Componente otimizado para estatísticas
+const StatsCards = () => {
+  const stats = useDashboardStats()
 
-export default function DashboardOverview() {
-  const totalFarms = allData.nucleos.reduce(
-    (acc, n) => acc + n.fazendas.length,
-    0
-  );
-  const allDocuments = allData.nucleos.flatMap((n) =>
-    n.fazendas.flatMap((f) => f.documentos)
-  );
-  const totalDocuments = allDocuments.length;
-  const completeDocuments = allDocuments.filter(
-    (d) => d.status === "Completo"
-  ).length;
-  const completionPercentage =
-    totalDocuments > 0
-      ? ((completeDocuments / totalDocuments) * 100).toFixed(1)
-      : 0;
-  
-  const criticalIssues = allDocuments
-    .filter((d) => d.status === "Incompleto" || d.status === "Divergência")
-    .slice(0, 5)
-    .map(doc => {
-        const farm = allData.nucleos.flatMap(n => n.fazendas).find(f => f.documentos.some(d => d.id === doc.id));
-        const nucleo = allData.nucleos.find(n => n.fazendas.some(f => f.id === farm?.id));
-        return { ...doc, farmName: farm?.name, nucleoName: nucleo?.name };
-    });
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total de Fazendas</CardTitle>
+          <Home className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalFarms}</div>
+          <p className="text-xs text-muted-foreground">
+            Núcleos ativos
+          </p>
+        </CardContent>
+      </Card>
 
-  const chartData = allData.nucleos.map((nucleo) => {
-    const docs = nucleo.fazendas.flatMap((f) => f.documentos);
-    return {
-      name: nucleo.name,
-      Completo: docs.filter((d) => d.status === "Completo").length,
-      Pendente: docs.filter((d) => d.status === "Pendente").length,
-      Incompleto: docs.filter((d) => d.status === "Incompleto").length,
-      Divergência: docs.filter((d) => d.status === "Divergência").length,
-    };
-  });
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total de Documentos</CardTitle>
+          <FileText className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalDocuments}</div>
+          <p className="text-xs text-muted-foreground">
+            Documentos cadastrados
+          </p>
+        </CardContent>
+      </Card>
 
-  // Análise por categoria de documentos
-  const docsByCategory = allDocuments.reduce((acc, doc) => {
-    if (!acc[doc.category]) {
-      acc[doc.category] = { total: 0, completo: 0, pendente: 0, incompleto: 0, divergencia: 0 };
-    }
-    acc[doc.category].total++;
-    acc[doc.category][doc.status.toLowerCase().replace('ência', 'encia')]++;
-    return acc;
-  }, {} as Record<string, any>);
-  
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Taxa de Conformidade</CardTitle>
+          <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.completionPercentage}%</div>
+          <p className="text-xs text-muted-foreground">
+            Documentos completos
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Problemas Críticos</CardTitle>
+          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.criticalIssues.length}</div>
+          <p className="text-xs text-muted-foreground">
+            Requerem atenção
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Componente otimizado para gráficos
+const ChartsSection = () => {
+  const stats = useDashboardStats()
+
   const chartConfig = {
-      Completo: { label: "Completo", color: "hsl(var(--chart-1))" },
-      Pendente: { label: "Pendente", color: "hsl(var(--chart-4))" },
-      Incompleto: { label: "Incompleto", color: "hsl(var(--destructive))" },
-      Divergência: { label: "Divergência", color: "hsl(var(--chart-2))" },
+    Completo: { label: "Completo", color: "hsl(var(--chart-1))" },
+    Pendente: { label: "Pendente", color: "hsl(var(--chart-2))" },
+    Incompleto: { label: "Incompleto", color: "hsl(var(--chart-3))" },
+    Divergência: { label: "Divergência", color: "hsl(var(--chart-4))" },
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Núcleos</CardTitle>
-            <Folder className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allData.nucleos.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Total de núcleos gerenciados
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fazendas</CardTitle>
-            <Home className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalFarms}</div>
-            <p className="text-xs text-muted-foreground">
-              Total de fazendas cadastradas
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documentos</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalDocuments}</div>
-            <p className="text-xs text-muted-foreground">
-              Total de documentos no sistema
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conformidade</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completionPercentage}%</div>
-            <p className="text-xs text-muted-foreground">
-              De documentos completos
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Status por Núcleo</CardTitle>
+          <CardDescription>
+            Distribuição de documentos por status em cada núcleo
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig}>
+            <BarChart data={stats.chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="Completo" fill="var(--color-Completo)" />
+              <Bar dataKey="Pendente" fill="var(--color-Pendente)" />
+              <Bar dataKey="Incompleto" fill="var(--color-Incompleto)" />
+              <Bar dataKey="Divergência" fill="var(--color-Divergência)" />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Visão Geral dos Núcleos</CardTitle>
-            <CardDescription>
-              Progresso da documentação por núcleo.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                  <YAxis />
-                  <Tooltip cursor={false} content={<ChartTooltipContent />} />
-                  <Bar dataKey="Completo" stackId="a" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Pendente" stackId="a" fill="hsl(var(--chart-4))" />
-                  <Bar dataKey="Divergência" stackId="a" fill="hsl(var(--chart-2))" />
-                  <Bar dataKey="Incompleto" stackId="a" fill="hsl(var(--destructive))" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Pendências Críticas</CardTitle>
-            <CardDescription>
-              Documentos com status de Incompleto ou Divergência.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Fazenda</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {criticalIssues.map(doc => {
-                    const StatusIcon = statusIcons[doc.status];
-                    return(
-                  <TableRow key={doc.id}>
-                    <TableCell className="font-medium">{doc.name}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="destructive"
-                        className={`text-white ${statusColors[doc.status]}`}
-                      >
-                         <StatusIcon className="mr-1 h-3 w-3" />
-                         {doc.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{doc.farmName}</TableCell>
-                  </TableRow>
-                )})}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Análise por Categoria de Documentos</CardTitle>
-            <CardDescription>
-              Distribuição de documentos por categoria e status.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(docsByCategory).map(([category, stats]) => {
-                const completionRate = ((stats.completo / stats.total) * 100).toFixed(1);
-                return (
-                  <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{category}</h4>
-                        <Badge variant="outline">{stats.total} docs</Badge>
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant="default" className="text-xs">
-                          {stats.completo} Completo
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          {stats.pendente} Pendente
-                        </Badge>
-                        <Badge variant="destructive" className="text-xs">
-                          {stats.incompleto} Incompleto
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {stats.divergencia} Divergência
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">{completionRate}%</div>
-                      <div className="text-xs text-muted-foreground">Conformidade</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Fluxo de Trabalho</CardTitle>
-            <CardDescription>
-              Progresso dos documentos coletivos no fluxo BMV.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { step: 1, name: 'Elegibilidade', icon: '📋' },
-                { step: 2, name: 'Legitimação', icon: '📄' },
-                { step: 3, name: 'Inventário', icon: '🌳' },
-                { step: 4, name: 'Quantificação', icon: '📊' },
-                { step: 5, name: 'Validação', icon: '✅' },
-                { step: 6, name: 'Verificação', icon: '🔍' },
-                { step: 7, name: 'Certificação', icon: '🏆' }
-              ].map(({ step, name, icon }) => {
-                const docsInStep = allDocuments.filter(d => d.category === 'Coletivo' && d.workflowStep === step);
-                const completedInStep = docsInStep.filter(d => d.status === 'Completo').length;
-                const progress = docsInStep.length > 0 ? (completedInStep / docsInStep.length) * 100 : 0;
-                
-                return (
-                  <div key={step} className="flex items-center gap-3">
-                    <div className="text-2xl">{icon}</div>
-                    <div className="flex-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{name}</span>
-                        <span className="text-muted-foreground">{completedInStep}/{docsInStep.length}</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2 mt-1">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gerenciador de Documentos */}
-        <Card className="col-span-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Gerenciador de Documentos
-            </CardTitle>
-            <CardDescription>
-              Acesse e organize seus documentos do Google Drive
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold">Funcionalidades</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Upload de documentos</li>
-                  <li>• Organização em pastas</li>
-                  <li>• Busca avançada</li>
-                  <li>• Visualização online</li>
-                </ul>
+      <Card>
+        <CardHeader>
+          <CardTitle>Análise por Categoria</CardTitle>
+          <CardDescription>
+            Status dos documentos por categoria
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Object.entries(stats.docsByCategory).map(([category, data]) => (
+              <div key={category} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">{category}</span>
+                  <span className="text-muted-foreground">
+                    {data.completo}/{data.total} completos
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full"
+                    style={{ width: `${(data.completo / data.total) * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <h4 className="font-semibold">Integração</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Google Drive API</li>
-                  <li>• Autenticação OAuth</li>
-                  <li>• Sincronização automática</li>
-                  <li>• Controle de permissões</li>
-                </ul>
-              </div>
-              <div className="flex items-center justify-center">
-                <a
-                  href="/documents"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Acessar Gerenciador
-                </a>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
+}
+
+// Componente otimizado para tabela de problemas
+const CriticalIssuesTable = () => {
+  const stats = useDashboardStats()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Problemas Críticos</CardTitle>
+        <CardDescription>
+          Documentos que requerem atenção imediata
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Documento</TableHead>
+              <TableHead>Fazenda</TableHead>
+              <TableHead>Núcleo</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {stats.criticalIssues.map((issue) => {
+              const StatusIcon = statusIcons[issue.status]
+              return (
+                <TableRow key={issue.id}>
+                  <TableCell className="font-medium">{issue.name}</TableCell>
+                  <TableCell>{issue.farmName}</TableCell>
+                  <TableCell>{issue.nucleoName}</TableCell>
+                  <TableCell>
+                    <Badge className={statusColors[issue.status]}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {issue.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Componente principal otimizado
+export default function DashboardOverview() {
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={<DashboardSkeleton />}>
+        <StatsCards />
+        <ChartsSection />
+        <CriticalIssuesTable />
+      </Suspense>
+    </div>
+  )
 }
