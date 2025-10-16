@@ -18,7 +18,8 @@ import {
   Settings,
   HardDrive,
   BarChart3,
-  History
+  History,
+  LayoutDashboard
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -50,8 +51,9 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const navLinks = [
-    { href: '/dashboard', icon: Home, label: 'Dashboard' },
-    { href: '/dashboard/documents', icon: FileText, label: 'Documentos' },
+    { href: '/dashboard', icon: Home, label: 'Analisador de Documentos' },
+    { href: '/dashboard/overview', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/dashboard/documents', icon: FileText, label: 'Navegador de Arquivos' },
     { href: '/dashboard/favorites', icon: Star, label: 'Favoritos' },
     { href: '/dashboard/tags', icon: Tag, label: 'Tags' },
     { href: '/dashboard/templates', icon: Package, label: 'Templates' },
