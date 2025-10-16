@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { validateDocument } from "@/app/actions";
 import { Loader2, UploadCloud, CheckCircle, XCircle, File as FileIcon, RefreshCw, Sparkles, Tag, Save, Folder, Edit, Eye, Search } from "lucide-react";
 import type { AIDocumentValidationOutput } from "@/ai/flows/ai-document-validation";
-import { useSystemNotifications } from "@/hooks/use-notifications";
+import { useNotifications } from "@/hooks/use-notifications";
 import { apiCache } from "@/lib/api-cache";
 import { documentCategories } from "@/lib/document-structure";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -72,7 +72,7 @@ interface DocumentValidatorProps {
 
 export default function DocumentValidator({ accessToken }: DocumentValidatorProps) {
   const { toast } = useToast();
-  const { showSuccess, showError } = useSystemNotifications();
+  const { showSuccess, showError } = useNotifications();
   const [file, setFile] = React.useState<File | null>(null);
   const [fileDataUri, setFileDataUri] = React.useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);

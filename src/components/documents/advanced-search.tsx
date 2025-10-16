@@ -66,7 +66,7 @@ export default function AdvancedSearch({ accessToken, onDocumentSelect }: Advanc
     hasResults,
     resultCount
   } = useDocumentSearch({
-    onSearch: async (query, searchFilters) => {
+    onSearch: async (query: string, searchFilters?: any) => {
       const headers = {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'

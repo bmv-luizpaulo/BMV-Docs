@@ -34,7 +34,7 @@ import {
   Loader2
 } from 'lucide-react'
 import { DriveDocument, DriveFolder } from '@/lib/google-drive'
-import { useSystemNotifications } from '@/hooks/use-notifications'
+import { useNotifications } from '@/hooks/use-notifications'
 
 interface FavoriteItem {
   id: string
@@ -64,7 +64,7 @@ export default function FavoritesManager({ accessToken, documents, folders }: Fa
   const [filterType, setFilterType] = useState<'all' | 'document' | 'folder'>('all')
   const [isLoading, setIsLoading] = useState(true);
   
-  const { showSuccess, showError } = useSystemNotifications()
+  const { showSuccess, showError } = useNotifications()
 
   // Carregar favoritos do localStorage
   useEffect(() => {
@@ -459,5 +459,3 @@ export default function FavoritesManager({ accessToken, documents, folders }: Fa
     </div>
   )
 }
-
-    

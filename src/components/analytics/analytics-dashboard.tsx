@@ -173,17 +173,17 @@ export default function AnalyticsDashboard({ accessToken, documents, folders }: 
           total: documents.length,
           byType: documentsByType,
           bySize: documentsBySize,
-          byDate: Object.entries(activityByDate).map(([date, count]) => ({ date, count }))
+          byDate: Object.entries(activityByDate).map(([date, count]) => ({ date, count: Number(count) }))
         },
         folders: {
           total: folders.length,
-          byDate: Object.entries(activityByDate).map(([date, count]) => ({ date, count }))
+          byDate: Object.entries(activityByDate).map(([date, count]) => ({ date, count: Number(count) }))
         },
         activity: {
           totalActions: activityLog.length,
           byAction: activityByAction,
-          byDate: Object.entries(activityByDate).map(([date, count]) => ({ date, count })),
-          byHour: Object.entries(activityByHour).map(([hour, count]) => ({ hour: parseInt(hour), count }))
+          byDate: Object.entries(activityByDate).map(([date, count]) => ({ date, count: Number(count) })),
+          byHour: Object.entries(activityByHour).map(([hour, count]) => ({ hour: parseInt(hour), count: Number(count) }))
         },
         favorites: {
           total: favorites.length,

@@ -3,14 +3,15 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'info'
+export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'default' | 'destructive' | undefined
 
-export interface Notification extends ToastProps {
+export interface Notification extends Omit<ToastProps, 'variant'> {
   id: string
   type: NotificationType
   title: React.ReactNode
   message?: React.ReactNode
-  action?: ToastActionElement
+  action?: ToastActionElement,
+  variant?: "default" | "destructive"
 }
 
 interface NotificationContextType {
@@ -38,19 +39,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, [])
 
   const showSuccess = useCallback((title: string, message?: string) => {
-    showToast({ type: 'success', title, message })
+    showToast({ type: 'success', title, message, variant: 'default' })
   }, [showToast])
 
   const showError = useCallback((title: string, message?: string) => {
-    showToast({ type: 'error', title, message })
+    showToast({ type: 'error', title, message, variant: 'destructive' })
   }, [showToast])
 
   const showWarning = useCallback((title: string, message?: string) => {
-    showToast({ type: 'warning', title, message })
+    showToast({ type: 'warning', title, message, variant: 'default' })
   }, [showToast])
 
   const showInfo = useCallback((title: string, message?: string) => {
-    showToast({ type: 'info', title, message })
+    showToast({ type: 'info', title, message, variant: 'default' })
   }, [showToast])
 
   const contextValue: NotificationContextType = {
@@ -139,4 +140,3 @@ export function useSystemNotifications() {
     notifyUnsupportedFileType
   }
 }
-

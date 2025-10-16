@@ -53,10 +53,11 @@ import {
   XCircle,
   FileText,
   Folder,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react'
 import { DriveDocument, DriveFolder } from '@/lib/google-drive'
-import { useSystemNotifications } from '@/hooks/use-notifications'
+import { useNotifications } from '@/hooks/use-notifications'
 
 interface BackupConfig {
   id: string
@@ -124,7 +125,7 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
   })
   const [isLoading, setIsLoading] = useState(true);
 
-  const { showSuccess, showError, showInfo } = useSystemNotifications()
+  const { showSuccess, showError, showInfo } = useNotifications()
 
   // Carregar configurações do localStorage
   useEffect(() => {
@@ -161,7 +162,7 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
   // Criar nova configuração
   const createConfig = useCallback(() => {
     if (!newConfig.name?.trim()) {
-      showError('Nome da configuração é obrigatório')
+      showError('Erro de Validação', 'Nome da configuração é obrigatório')
       return
     }
 
@@ -266,7 +267,7 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
       // Atualizar configuração
       const updatedConfigs = backupConfigs.map(c => 
         c.id === configId 
-          ? { ...c, lastBackup: new Date().toISOString(), status: 'completed' }
+          ? { ...c, lastBackup: new Date().toISOString(), status: 'completed' as const }
           : c
       )
       saveConfigs(updatedConfigs)
@@ -283,7 +284,7 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
 
       const failedConfigs = backupConfigs.map(c => 
         c.id === configId 
-          ? { ...c, status: 'failed', errorMessage: job.errorMessage }
+          ? { ...c, status: 'failed' as const, errorMessage: job.errorMessage }
           : c
       )
       saveConfigs(failedConfigs)
@@ -713,5 +714,3 @@ export default function BackupManager({ accessToken, documents, folders }: Backu
     </div>
   )
 }
-
-    

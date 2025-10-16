@@ -25,7 +25,7 @@ export function createOAuth2ClientWithToken(accessToken: string) {
 }
 
 // Configuração do Google Drive API
-export const drive = google.drive({ version: 'v3', auth: oauth2Client })
+export const drive = google.drive({ version: 'v3', auth: oauth2Client as any })
 
 // Escopos necessários para Google Drive
 export const SCOPES = [

@@ -31,6 +31,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -49,7 +50,7 @@ import {
 } from 'lucide-react'
 import { DriveDocument } from '@/lib/google-drive'
 import { useDocuments } from '@/store/app-store'
-import { useSystemNotifications } from '@/hooks/use-notifications'
+import { useNotifications } from '@/hooks/use-notifications'
 import { DocumentListSkeleton } from '@/components/ui/loading-skeletons'
 
 interface BulkOperationsProps {
@@ -69,11 +70,11 @@ export default function BulkOperations({ accessToken, documents, onRefresh }: Bu
   
   const { removeDocument } = useDocuments()
   const { 
-    notifyDocumentDeleted, 
-    notifyValidationError,
-    showSuccess,
-    showError 
-  } = useSystemNotifications()
+    showSuccess, 
+    showError,
+    notifyDocumentDeleted,
+    notifyValidationError
+  } = useNotifications()
 
   // Filtrar e ordenar documentos
   const filteredAndSortedDocuments = documents
@@ -166,7 +167,7 @@ export default function BulkOperations({ accessToken, documents, onRefresh }: Bu
     } finally {
       setIsProcessing(false)
     }
-  }, [selectedDocuments, documents, accessToken, removeDocument, notifyDocumentDeleted, showSuccess, showError, onRefresh])
+  }, [selectedDocuments, documents, accessToken, removeDocument, notifyDocumentDeleted, showSuccess, showError, onRefresh, notifyValidationError])
 
   const handleExport = useCallback(() => {
     const selectedDocs = documents.filter(doc => selectedDocuments.has(doc.id))

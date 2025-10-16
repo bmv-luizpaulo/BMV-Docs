@@ -44,7 +44,7 @@ import {
   Users
 } from 'lucide-react'
 import { DriveDocument, DriveFolder } from '@/lib/google-drive'
-import { useSystemNotifications } from '@/hooks/use-notifications'
+import { useNotifications } from '@/hooks/use-notifications'
 
 interface DocumentTag {
   id: string
@@ -90,7 +90,7 @@ export default function TagManager({ accessToken, documents, folders }: TagManag
     category: 'general' as DocumentTag['category']
   })
 
-  const { showSuccess, showError } = useSystemNotifications()
+  const { showSuccess, showError } = useNotifications()
 
   // Cores predefinidas para tags
   const tagColors = [
@@ -127,12 +127,12 @@ export default function TagManager({ accessToken, documents, folders }: TagManag
   // Criar nova tag
   const createTag = useCallback(() => {
     if (!newTag.name.trim()) {
-      showError('Nome da tag é obrigatório')
+      showError('Erro de Validação', 'Nome da tag é obrigatório')
       return
     }
 
     if (tags.some(tag => tag.name.toLowerCase() === newTag.name.toLowerCase())) {
-      showError('Já existe uma tag com este nome')
+      showError('Erro de Validação', 'Já existe uma tag com este nome')
       return
     }
 
@@ -183,7 +183,7 @@ export default function TagManager({ accessToken, documents, folders }: TagManag
     if (!tag) return
 
     if (tag.usageCount > 0) {
-      showError('Não é possível excluir uma tag que está sendo usada')
+      showError('Ação Bloqueada', 'Não é possível excluir uma tag que está sendo usada')
       return
     }
 
@@ -205,7 +205,7 @@ export default function TagManager({ accessToken, documents, folders }: TagManag
 
     if (existingItem) {
       if (existingItem.tags.includes(tagId)) {
-        showError('Este item já possui esta tag')
+        showError('Erro', 'Este item já possui esta tag')
         return
       }
 

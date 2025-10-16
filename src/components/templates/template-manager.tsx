@@ -82,7 +82,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { DriveDocument, DriveFolder } from '@/lib/google-drive'
-import { useSystemNotifications } from '@/hooks/use-notifications'
+import { useNotifications } from '@/hooks/use-notifications'
 
 interface DocumentTemplate {
   id: string
@@ -160,7 +160,7 @@ export default function TemplateManager({ accessToken, documents, folders }: Tem
     }
   })
 
-  const { showSuccess, showError, showInfo } = useSystemNotifications()
+  const { showSuccess, showError, showInfo } = useNotifications()
 
   // Carregar templates do localStorage
   useEffect(() => {
@@ -394,7 +394,7 @@ OBSERVAÇÕES
   // Criar novo template
   const createTemplate = useCallback(() => {
     if (!newTemplate.name?.trim()) {
-      showError('Nome do template é obrigatório')
+      showError('Erro de Validação','Nome do template é obrigatório')
       return
     }
 
