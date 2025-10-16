@@ -23,45 +23,12 @@ import { useToast } from "@/hooks/use-toast";
 import { validateDocument } from "@/app/actions";
 import { Loader2, UploadCloud, CheckCircle, XCircle, File as FileIcon, RefreshCw, Sparkles, Tag, Save, Folder, Edit, Eye, Search } from "lucide-react";
 import type { AIDocumentValidationOutput } from "@/ai/flows/ai-document-validation";
-import { useNotifications } from "@/hooks/use-notifications";
 import { apiCache } from "@/lib/api-cache";
 import { documentCategories } from "@/lib/document-structure";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useFolders } from "@/store/app-store";
 
-
-// Mapeamento simplificado de subcategorias para nomes de pastas (deve ser mais robusto em produção)
-const categoryToFolderIdMap: Record<string, string> = {
-  // Coletivo
-  'Elegibilidade': '1-Elegibilidade',
-  'Legitimacao': '2-Legitimacao',
-  'Inventario': '3-Inventario',
-  'Quantificacao': '4-Quantificacao',
-  'Linha_Base': '5-Linha_Base',
-  'Concepcao_Projeto': '6-Concepcao_Projeto',
-  'Validacao': '7-Validacao',
-  'Verificacao': '8-Verificacao',
-  'Certificacao': '9-Certificacao',
-  'Registro_CPR': '10-Registro_CPR',
-  'Custodia_SKR': '11-Custodia_SKR',
-  'Transferencias': '12-Transferencias',
-  'Emissao_Certificado': '13-Emissao_Certificado',
-  'Monitoramento': '14-Monitoramento',
-  'Reemissao_Certificado': '15-Reemissao_Certificado',
-  // Individual
-  'CAR_Relatorio': 'CAR',
-  'PAPA': 'PAPA',
-  'Documentos_Pessoais': 'Documentos Pessoais',
-  'Documentos_Propriedade': 'Documentos da Propriedade',
-  'Financeiro': 'Financeiro',
-  // Outros
-  'TCA': 'TCA',
-  'DPD': 'DPD',
-  'TAR': 'TAR',
-  'Transferencia_Direitos': 'Transferencia de Direitos',
-  'Autorizacoes': 'Autorizacoes',
-  'Diversos': 'Diversos'
-};
 
 const allCategories = Object.values(documentCategories).flat();
 
@@ -72,7 +39,7 @@ interface DocumentValidatorProps {
 
 export default function DocumentValidator({ accessToken }: DocumentValidatorProps) {
   const { toast } = useToast();
-  const { showSuccess, showError } = useNotifications();
+  const { folders } = useFolders();
   const [file, setFile] = React.useState<File | null>(null);
   const [fileDataUri, setFileDataUri] = React.useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
@@ -147,13 +114,15 @@ export default function DocumentValidator({ accessToken }: DocumentValidatorProp
 
   const handleSaveToDrive = async () => {
     if (!file || !selectedFolder) {
-      showError("Erro", "Categoria de destino necessária para salvar.");
+      toast({ variant: 'destructive', title: "Erro", description: "Categoria de destino necessária para salvar." });
       return;
     }
 
     setIsSaving(true);
     
-    const targetFolderId = categoryToFolderIdMap[selectedFolder] || 'root';
+    // Find the folder ID from the global state based on the selected folder name
+    const targetFolder = folders.find(f => f.name === selectedFolder.replace(/_/g, ' '));
+    const targetFolderId = targetFolder ? targetFolder.id : 'root';
     
     console.log(`Tentando salvar na pasta: ${selectedFolder} (ID: ${targetFolderId})`);
 
@@ -178,7 +147,7 @@ export default function DocumentValidator({ accessToken }: DocumentValidatorProp
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Documento Salvo!", `"${file.name}" foi salvo com sucesso na pasta "${selectedFolder}".`);
+        toast({ title: "Documento Salvo!", description: `"${file.name}" foi salvo com sucesso na pasta "${selectedFolder}".` });
         apiCache.invalidateDocuments(targetFolderId);
         resetState();
       } else {
@@ -187,7 +156,7 @@ export default function DocumentValidator({ accessToken }: DocumentValidatorProp
 
     } catch (err: any) {
       console.error('Erro ao salvar no Drive:', err);
-      showError("Erro ao Salvar", err.message || "Não foi possível salvar o documento no Google Drive.");
+      toast({ variant: 'destructive', title: "Erro ao Salvar", description: err.message || "Não foi possível salvar o documento no Google Drive." });
     } finally {
       setIsSaving(false);
     }

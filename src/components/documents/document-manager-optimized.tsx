@@ -50,9 +50,9 @@ import { useDocumentSearch } from '@/hooks/use-document-search'
 import { 
   DocumentListSkeleton, 
   FolderListSkeleton, 
-  LoadingButton, 
   ProgressBar 
 } from '@/components/ui/loading-skeletons'
+import { LoadingButton } from '@/components/ui/loading-skeletons'
 import { apiCache } from '@/lib/api-cache'
 
 interface DocumentManagerProps {
@@ -137,6 +137,7 @@ export default function DocumentManager({ accessToken }: DocumentManagerProps) {
       }
 
       // Carregar pastas
+      setLoadingFolders(true)
       const foldersResponse = await fetch(`/api/folders?parentId=${folderId}`, {
         headers
       })
@@ -144,13 +145,17 @@ export default function DocumentManager({ accessToken }: DocumentManagerProps) {
 
       if (foldersData.success) {
         setFolders(foldersData.folders)
+      } else {
+        setFoldersError(foldersData.error)
       }
+
 
     } catch (err) {
       console.error('Erro ao carregar documentos:', err)
       setDocumentsError('Erro ao carregar documentos')
     } finally {
       setLoadingDocuments(false)
+      setLoadingFolders(false)
     }
   }
 
