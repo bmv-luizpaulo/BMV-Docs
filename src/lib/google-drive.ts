@@ -34,7 +34,7 @@ export function getAuthUrl(): string {
   const oauth2Client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.NEXT_PUBLIC_URL // Usando uma variável mais genérica
+    typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_URL
   );
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -48,7 +48,7 @@ export async function getTokens(code: string) {
   const oauth2Client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.NEXT_PUBLIC_URL
+    typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_URL
   );
   const { tokens } = await oauth2Client.getToken(code)
   return tokens
