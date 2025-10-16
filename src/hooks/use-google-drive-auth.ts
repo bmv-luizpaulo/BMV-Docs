@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/firebase/provider'
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
+import { signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth'
 
 interface GoogleDriveAuth {
   accessToken: string | null
@@ -19,13 +19,31 @@ export function useGoogleDriveAuth(): GoogleDriveAuth {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Verificar se já tem token salvo
+  // Verificar se já tem token salvo e resultado de redirect
   useEffect(() => {
     const savedToken = localStorage.getItem('google_drive_token')
     if (savedToken) {
       setAccessToken(savedToken)
     }
-  }, [])
+
+    // Verificar se há resultado de redirect
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth)
+        if (result) {
+          const credential = GoogleAuthProvider.credentialFromResult(result)
+          if (credential?.accessToken) {
+            setAccessToken(credential.accessToken)
+            localStorage.setItem('google_drive_token', credential.accessToken)
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar resultado de redirect:', error)
+      }
+    }
+
+    checkRedirectResult()
+  }, [auth])
 
   const authenticate = async () => {
     setIsLoading(true)
@@ -39,20 +57,12 @@ export function useGoogleDriveAuth(): GoogleDriveAuth {
       provider.addScope('https://www.googleapis.com/auth/drive.file')
       provider.addScope('https://www.googleapis.com/auth/drive.metadata')
 
-      const result = await signInWithPopup(auth, provider)
-      const credential = GoogleAuthProvider.credentialFromResult(result)
-      
-      if (credential?.accessToken) {
-        setAccessToken(credential.accessToken)
-        localStorage.setItem('google_drive_token', credential.accessToken)
-      } else {
-        throw new Error('Não foi possível obter o token de acesso')
-      }
+      // Usar redirect em vez de popup para evitar problemas de COOP
+      await signInWithRedirect(auth, provider)
 
     } catch (err: any) {
       console.error('Erro na autenticação Google Drive:', err)
       setError('Erro ao autenticar com Google Drive')
-    } finally {
       setIsLoading(false)
     }
   }
