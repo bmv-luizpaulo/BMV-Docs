@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import {
   Card,
@@ -15,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import type { DocumentoStatus } from "@/lib/types";
@@ -27,10 +29,22 @@ import {
   Clock,
   Home,
   ExternalLink,
+  Users,
+  Star,
+  HardDrive,
+  BookOpen
 } from "lucide-react";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { DashboardSkeleton } from "@/components/ui/loading-skeletons";
 import { Suspense } from "react";
+
+import FavoritesManager from '@/components/favorites/favorites-manager';
+import ActivityHistory from '@/components/activity/activity-history';
+import TagManager from '@/components/tags/tag-manager';
+import BackupManager from '@/components/backup/backup-manager';
+import AnalyticsDashboard from '@/components/analytics/analytics-dashboard';
+import TemplateManager from '@/components/templates/template-manager';
+import DocumentManager from "@/components/documents/document-manager-optimized";
 
 const statusColors: Record<DocumentoStatus, string> = {
   Completo: "bg-green-500",
@@ -227,13 +241,71 @@ const CriticalIssuesTable = () => {
 
 // Componente principal otimizado
 export default function DashboardOverview() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  // Mock data, replace with actual data fetching
+  const accessToken = "mock-access-token";
+  const documents: any[] = [];
+  const folders: any[] = [];
+
   return (
-    <div className="space-y-6">
-      <Suspense fallback={<DashboardSkeleton />}>
-        <StatsCards />
-        <ChartsSection />
-        <CriticalIssuesTable />
-      </Suspense>
-    </div>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-7">
+        <TabsTrigger value="dashboard">
+          <Home className="h-4 w-4 mr-2" />
+          Dashboard
+        </TabsTrigger>
+        <TabsTrigger value="documents">
+          <FileText className="h-4 w-4 mr-2" />
+          Documentos
+        </TabsTrigger>
+        <TabsTrigger value="favorites">
+          <Star className="h-4 w-4 mr-2" />
+          Favoritos
+        </TabsTrigger>
+        <TabsTrigger value="activity">
+          <Clock className="h-4 w-4 mr-2" />
+          Atividades
+        </TabsTrigger>
+        <TabsTrigger value="tags">
+          <Users className="h-4 w-4 mr-2" />
+          Tags
+        </TabsTrigger>
+        <TabsTrigger value="backup">
+          <HardDrive className="h-4 w-4 mr-2" />
+          Backup
+        </TabsTrigger>
+        <TabsTrigger value="templates">
+          <BookOpen className="h-4 w-4 mr-2" />
+          Templates
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="dashboard" className="mt-6">
+        <div className="space-y-6">
+          <Suspense fallback={<DashboardSkeleton />}>
+            <StatsCards />
+            <ChartsSection />
+            <CriticalIssuesTable />
+          </Suspense>
+        </div>
+      </TabsContent>
+      <TabsContent value="documents">
+          <DocumentManager accessToken={accessToken} />
+      </TabsContent>
+      <TabsContent value="favorites">
+          <FavoritesManager accessToken={accessToken} documents={documents} folders={folders} />
+      </TabsContent>
+      <TabsContent value="activity">
+          <ActivityHistory accessToken={accessToken} />
+      </TabsContent>
+      <TabsContent value="tags">
+          <TagManager accessToken={accessToken} documents={documents} folders={folders} />
+      </TabsContent>
+      <TabsContent value="backup">
+          <BackupManager accessToken={accessToken} documents={documents} folders={folders} />
+      </TabsContent>
+      <TabsContent value="templates">
+          <TemplateManager accessToken={accessToken} documents={documents} folders={folders} />
+      </TabsContent>
+    </Tabs>
   )
 }

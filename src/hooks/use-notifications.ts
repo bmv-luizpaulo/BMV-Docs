@@ -33,6 +33,10 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
+  const removeNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }, [])
+
   const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9)
     const newNotification = { ...notification, id }
@@ -51,11 +55,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       description: notification.message,
       variant: notification.type === 'error' ? 'destructive' : 'default'
     })
-  }, [])
-
-  const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-  }, [])
+  }, [removeNotification])
 
   const clearAll = useCallback(() => {
     setNotifications([])

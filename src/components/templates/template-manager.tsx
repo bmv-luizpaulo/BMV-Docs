@@ -298,7 +298,7 @@ CONCLUSÃO
 {{conclusion}}
 
 Relatório elaborado por: {{authorName}}
-Data: {{reportDate}
+Data: {{reportDate}}
 Departamento: {{department}}`,
         variables: [
           { id: 'month', name: 'month', type: 'text', label: 'Mês', placeholder: 'Janeiro', required: true },
