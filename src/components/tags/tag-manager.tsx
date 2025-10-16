@@ -571,6 +571,7 @@ export default function TagManager({ accessToken, documents, folders }: TagManag
                       <div className="flex items-center space-x-2">
                         <select
                           className="text-xs p-1 border rounded"
+                          value=""
                           onChange={(e) => {
                             if (e.target.value) {
                               addTagToItem(item.id, e.target.value)

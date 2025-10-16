@@ -209,12 +209,12 @@ export default function AdvancedSearch({ accessToken, onDocumentSelect }: Advanc
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="mimeType">Tipo de Arquivo</Label>
-                  <Select value={filters.mimeType} onValueChange={(value) => setFilters(prev => ({ ...prev, mimeType: value }))}>
+                  <Select value={filters.mimeType} onValueChange={(value) => setFilters(prev => ({ ...prev, mimeType: value === 'all' ? '' : value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os tipos</SelectItem>
+                      <SelectItem value="all">Todos os tipos</SelectItem>
                       <SelectItem value="application/pdf">PDF</SelectItem>
                       <SelectItem value="image/">Imagens</SelectItem>
                       <SelectItem value="application/vnd.openxmlformats-officedocument.wordprocessingml.document">Word</SelectItem>
@@ -226,12 +226,12 @@ export default function AdvancedSearch({ accessToken, onDocumentSelect }: Advanc
 
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+                  <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === 'all' ? '' : value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os status</SelectItem>
+                      <SelectItem value="all">Todos os status</SelectItem>
                       <SelectItem value="Completo">Completo</SelectItem>
                       <SelectItem value="Pendente">Pendente</SelectItem>
                       <SelectItem value="Incompleto">Incompleto</SelectItem>

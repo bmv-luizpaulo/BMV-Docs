@@ -242,12 +242,12 @@ export default function BulkOperations({ accessToken, documents, onRefresh }: Bu
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="filterStatus">Filtrar por Status</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value === 'all' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="Completo">Completo</SelectItem>
                   <SelectItem value="Pendente">Pendente</SelectItem>
                   <SelectItem value="Incompleto">Incompleto</SelectItem>
@@ -258,12 +258,12 @@ export default function BulkOperations({ accessToken, documents, onRefresh }: Bu
 
             <div>
               <Label htmlFor="filterType">Filtrar por Tipo</Label>
-              <Select value={filterType} onValueChange={setFilterType}>
+              <Select value={filterType} onValueChange={(value) => setFilterType(value === 'all' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="pdf">PDF</SelectItem>
                   <SelectItem value="image">Imagens</SelectItem>
                   <SelectItem value="word">Word</SelectItem>
