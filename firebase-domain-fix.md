@@ -28,9 +28,9 @@ O domínio `bmvbackoffice.vercel.app` não está autorizado no Firebase Console.
    - `https://bmvbackoffice.vercel.app/api/auth/callback/google`
 7. Clique em **"Save"**
 
-### 3. **Atualizar Variáveis de Ambiente**
+### 3. **Atualizar Variáveis de Ambiente (na Vercel)**
 
-Edite o arquivo `.env.local` e altere:
+Vá até as configurações do seu projeto na Vercel e altere a variável de ambiente:
 
 ```env
 # ANTES
@@ -44,11 +44,11 @@ NEXTAUTH_URL=https://bmvbackoffice.vercel.app
 
 Após fazer as alterações:
 
-1. **Redeploy no Vercel** (se necessário)
-2. **Teste a autenticação** no domínio de produção
-3. **Verifique o console** para confirmar que o erro foi resolvido
+1. **Faça um novo deploy no Vercel** para que as novas variáveis de ambiente sejam aplicadas.
+2. **Teste a autenticação** no domínio de produção.
+3. **Verifique o console do navegador** para confirmar que o erro foi resolvido.
 
-## 🔍 **Domínios Atualmente Configurados**
+## 🔍 **Domínios Atualmente Configurados (Exemplo)**
 
 ### Firebase Auth Domain:
 - `studio-5757745802-11667.firebaseapp.com` ✅
@@ -64,13 +64,13 @@ Após fazer as alterações:
 
 ## ⚠️ **Importante**
 
-- As alterações no Firebase Console podem levar alguns minutos para serem aplicadas
-- Certifique-se de fazer as alterações em ambos os consoles (Firebase e Google Cloud)
-- Mantenha as configurações de desenvolvimento para testes locais
+- As alterações no Firebase e Google Cloud Console podem levar alguns minutos para serem aplicadas.
+- Certifique-se de fazer as alterações em ambos os consoles.
+- Mantenha as configurações de `localhost` para poder continuar testando localmente.
 
 ## 🧪 **Teste Após Correção**
 
 1. Acesse: `https://bmvbackoffice.vercel.app/login`
 2. Clique em "Entrar com Google"
-3. Verifique se não há mais erros no console
-4. Confirme que a autenticação funciona corretamente
+3. Verifique se não há mais erros no console.
+4. Confirme que a autenticação funciona corretamente e que os documentos carregam.
