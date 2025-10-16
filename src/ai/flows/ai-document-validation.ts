@@ -21,12 +21,12 @@ const AIDocumentValidationInputSchema = z.object({
 export type AIDocumentValidationInput = z.infer<typeof AIDocumentValidationInputSchema>;
 
 const AIDocumentValidationOutputSchema = z.object({
-  isConsistent: z.boolean().describe('Whether or not the document is consistent.'),
-  isReadable: z.boolean().describe('Whether or not the document is readable.'),
-  isComplete: z.boolean().describe('Whether or not the document is complete.'),
-  validationDetails: z.string().describe('Details about the validation results.'),
-  suggestedTags: z.array(z.string()).describe('A list of suggested tags for the document based on its content.'),
-  suggestedCategory: z.string().describe('The most relevant subcategory for the document.'),
+  isConsistent: z.boolean().describe('Se o documento é consistente e não possui informações conflitantes.'),
+  isReadable: z.boolean().describe('Se o documento está legível, sem rasuras ou problemas de digitalização.'),
+  isComplete: z.boolean().describe('Se o documento parece estar completo, sem páginas faltando.'),
+  validationDetails: z.string().describe('Detalhes sobre os resultados da validação em português.'),
+  suggestedTags: z.array(z.string()).describe('Uma lista de tags sugeridas para o documento com base em seu conteúdo.'),
+  suggestedCategory: z.string().describe('A subcategoria mais relevante para o documento.'),
 });
 export type AIDocumentValidationOutput = z.infer<typeof AIDocumentValidationOutputSchema>;
 
@@ -48,9 +48,11 @@ Document: {{media url=documentDataUri}}
 
 Determine:
 - Whether the document is consistent, readable, and complete.
+- A detailed analysis of the document content and validation results.
 - A list of suggested tags (suggestedTags).
 - The most relevant subcategory (suggestedCategory).
 
+Important: Respond ALL text fields in Brazilian Portuguese.
 Output in JSON format.
 `,
 });
