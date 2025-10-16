@@ -1,7 +1,6 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { toast } from '@/hooks/use-toast'
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info'
 
@@ -43,13 +42,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const newNotification = { ...notification, id }
       
       setNotifications((prev) => [...prev, newNotification]);
-
-      toast({
-        title: notification.title,
-        description: notification.message,
-        variant: notification.type === 'error' ? 'destructive' : 'default',
-        duration: notification.duration || 5000,
-      });
 
       const duration = notification.duration || 5000;
       setTimeout(() => {
