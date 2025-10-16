@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { drive, oauth2Client, DriveDocument, createOAuth2ClientWithToken } from '@/lib/google-drive'
+import { DriveDocument, createOAuth2ClientWithToken } from '@/lib/google-drive'
 import { apiCache } from '@/lib/api-cache'
 
 // Middleware para verificar autenticação
@@ -15,14 +15,14 @@ async function checkAuth(request: NextRequest) {
     const token = authHeader.replace('Bearer ', '')
     console.log('🔑 Token recebido:', token.substring(0, 20) + '...')
     
-    // Criar nova instância do OAuth2Client com o token
+    // Criar nova instância do OAuth2Client com o token para cada requisição
     const client = createOAuth2ClientWithToken(token)
     
-    console.log('✅ Credenciais configuradas com sucesso')
+    console.log('✅ Credenciais configuradas com sucesso para esta requisição')
     return { client }
-  } catch (error) {
-    console.error('❌ Erro ao configurar credenciais:', error)
-    return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+  } catch (error: any) {
+    console.error('❌ Erro ao configurar credenciais:', error.message)
+    return NextResponse.json({ error: 'Token inválido', details: error.message }, { status: 401 })
   }
 }
 
@@ -52,12 +52,12 @@ export async function GET(request: NextRequest) {
 
     let query = "trashed = false"
     
-    if (folderId && folderId !== 'root') {
+    if (folderId) {
       query += ` and '${folderId}' in parents`
     }
     
     if (mimeType) {
-      query += ` and mimeType = '${mimeType}'`
+      query += ` and mimeType contains '${mimeType}'`
     }
     
     if (q) {
@@ -66,14 +66,14 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Query final:', query)
 
-    // Criar instância do Drive API com o cliente autenticado
+    // Criar instância do Drive API com o cliente autenticado específico da requisição
     const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
 
     const response = await driveWithAuth.files.list({
       q: query,
       fields: 'files(id,name,mimeType,size,createdTime,modifiedTime,webViewLink,webContentLink,parents,description,starred)',
-      orderBy: 'modifiedTime desc',
-      pageSize: 50
+      orderBy: 'folder, modifiedTime desc',
+      pageSize: 100
     })
 
     const documents: DriveDocument[] = response.data.files || []
@@ -90,9 +90,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result)
 
-  } catch (error) {
-    console.error('❌ Erro ao listar documentos:', error)
-    console.error('❌ Detalhes do erro:', error.message)
+  } catch (error: any) {
+    console.error('❌ Erro ao listar documentos:', error.message)
     return NextResponse.json(
       { error: 'Erro ao listar documentos', details: error.message },
       { status: 500 }
@@ -102,8 +101,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Criar/Upload documento
 export async function POST(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const formData = await request.formData()
@@ -112,10 +111,7 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description') as string
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'Arquivo é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Arquivo é obrigatório' }, { status: 400 })
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
@@ -125,8 +121,10 @@ export async function POST(request: NextRequest) {
       parents: folderId ? [folderId] : undefined,
       description: description || undefined
     }
+    
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
 
-    const response = await drive.files.create({
+    const response = await driveWithAuth.files.create({
       requestBody: metadata,
       media: {
         mimeType: file.type,
@@ -140,10 +138,10 @@ export async function POST(request: NextRequest) {
       document: response.data
     })
 
-  } catch (error) {
-    console.error('Erro ao criar documento:', error)
+  } catch (error: any) {
+    console.error('Erro ao criar documento:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao criar documento' },
+      { error: 'Erro ao criar documento', details: error.message },
       { status: 500 }
     )
   }
@@ -151,17 +149,14 @@ export async function POST(request: NextRequest) {
 
 // PUT - Atualizar documento
 export async function PUT(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { fileId, name, description, starred, folderId } = await request.json()
 
     if (!fileId) {
-      return NextResponse.json(
-        { error: 'ID do arquivo é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'ID do arquivo é obrigatório' }, { status: 400 })
     }
 
     const updateData: any = {}
@@ -170,7 +165,9 @@ export async function PUT(request: NextRequest) {
     if (description !== undefined) updateData.description = description
     if (starred !== undefined) updateData.starred = starred
 
-    const response = await drive.files.update({
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
+    
+    const response = await driveWithAuth.files.update({
       fileId,
       requestBody: updateData,
       fields: 'id,name,mimeType,size,createdTime,modifiedTime,webViewLink,description,starred'
@@ -178,10 +175,13 @@ export async function PUT(request: NextRequest) {
 
     // Se mudou de pasta
     if (folderId) {
-      await drive.files.update({
+      const file = await driveWithAuth.files.get({ fileId, fields: 'parents' })
+      const previousParents = file.data.parents?.join(',')
+      
+      await driveWithAuth.files.update({
         fileId,
         addParents: folderId,
-        removeParents: 'root'
+        removeParents: previousParents,
       })
     }
 
@@ -190,10 +190,10 @@ export async function PUT(request: NextRequest) {
       document: response.data
     })
 
-  } catch (error) {
-    console.error('Erro ao atualizar documento:', error)
+  } catch (error: any) {
+    console.error('Erro ao atualizar documento:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao atualizar documento' },
+      { error: 'Erro ao atualizar documento', details: error.message },
       { status: 500 }
     )
   }
@@ -201,21 +201,20 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Excluir documento
 export async function DELETE(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { searchParams } = new URL(request.url)
     const fileId = searchParams.get('fileId')
 
     if (!fileId) {
-      return NextResponse.json(
-        { error: 'ID do arquivo é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'ID do arquivo é obrigatório' }, { status: 400 })
     }
 
-    await drive.files.delete({
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
+
+    await driveWithAuth.files.delete({
       fileId
     })
 
@@ -224,10 +223,10 @@ export async function DELETE(request: NextRequest) {
       message: 'Documento excluído com sucesso'
     })
 
-  } catch (error) {
-    console.error('Erro ao excluir documento:', error)
+  } catch (error: any) {
+    console.error('Erro ao excluir documento:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao excluir documento' },
+      { error: 'Erro ao excluir documento', details: error.message },
       { status: 500 }
     )
   }

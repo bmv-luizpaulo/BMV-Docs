@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { drive, oauth2Client, createOAuth2ClientWithToken } from '@/lib/google-drive'
+import { createOAuth2ClientWithToken } from '@/lib/google-drive'
 import { apiCache } from '@/lib/api-cache'
 
 // Middleware para verificar autenticação
@@ -15,14 +15,14 @@ async function checkAuth(request: NextRequest) {
     const token = authHeader.replace('Bearer ', '')
     console.log('🔑 Token recebido:', token.substring(0, 20) + '...')
     
-    // Criar nova instância do OAuth2Client com o token
+    // Criar nova instância do OAuth2Client com o token para cada requisição
     const client = createOAuth2ClientWithToken(token)
     
-    console.log('✅ Credenciais configuradas com sucesso')
+    console.log('✅ Credenciais configuradas com sucesso para esta requisição')
     return { client }
-  } catch (error) {
-    console.error('❌ Erro ao configurar credenciais:', error)
-    return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+  } catch (error: any) {
+    console.error('❌ Erro ao configurar credenciais:', error.message)
+    return NextResponse.json({ error: 'Token inválido', details: error.message }, { status: 401 })
   }
 }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     const query = `mimeType = 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`
     console.log('🔍 Query final:', query)
 
-    // Criar instância do Drive API com o cliente autenticado
+    // Criar instância do Drive API com o cliente autenticado específico da requisição
     const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
 
     const response = await driveWithAuth.files.list({
@@ -73,9 +73,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result)
 
-  } catch (error) {
-    console.error('❌ Erro ao listar pastas:', error)
-    console.error('❌ Detalhes do erro:', error.message)
+  } catch (error: any) {
+    console.error('❌ Erro ao listar pastas:', error.message)
     return NextResponse.json(
       { error: 'Erro ao listar pastas', details: error.message },
       { status: 500 }
@@ -85,17 +84,14 @@ export async function GET(request: NextRequest) {
 
 // POST - Criar pasta
 export async function POST(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { name, parentId, description } = await request.json()
 
     if (!name) {
-      return NextResponse.json(
-        { error: 'Nome da pasta é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Nome da pasta é obrigatório' }, { status: 400 })
     }
 
     const metadata = {
@@ -104,8 +100,10 @@ export async function POST(request: NextRequest) {
       parents: parentId ? [parentId] : ['root'],
       description: description || undefined
     }
+    
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
 
-    const response = await drive.files.create({
+    const response = await driveWithAuth.files.create({
       requestBody: metadata,
       fields: 'id,name,createdTime,modifiedTime,parents'
     })
@@ -115,10 +113,10 @@ export async function POST(request: NextRequest) {
       folder: response.data
     })
 
-  } catch (error) {
-    console.error('Erro ao criar pasta:', error)
+  } catch (error: any) {
+    console.error('Erro ao criar pasta:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao criar pasta' },
+      { error: 'Erro ao criar pasta', details: error.message },
       { status: 500 }
     )
   }
@@ -126,17 +124,14 @@ export async function POST(request: NextRequest) {
 
 // PUT - Atualizar pasta
 export async function PUT(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { folderId, name, description } = await request.json()
 
     if (!folderId) {
-      return NextResponse.json(
-        { error: 'ID da pasta é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'ID da pasta é obrigatório' }, { status: 400 })
     }
 
     const updateData: any = {}
@@ -144,7 +139,9 @@ export async function PUT(request: NextRequest) {
     if (name) updateData.name = name
     if (description !== undefined) updateData.description = description
 
-    const response = await drive.files.update({
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
+    
+    const response = await driveWithAuth.files.update({
       fileId: folderId,
       requestBody: updateData,
       fields: 'id,name,createdTime,modifiedTime,parents'
@@ -155,10 +152,10 @@ export async function PUT(request: NextRequest) {
       folder: response.data
     })
 
-  } catch (error) {
-    console.error('Erro ao atualizar pasta:', error)
+  } catch (error: any) {
+    console.error('Erro ao atualizar pasta:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao atualizar pasta' },
+      { error: 'Erro ao atualizar pasta', details: error.message },
       { status: 500 }
     )
   }
@@ -166,21 +163,20 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Excluir pasta
 export async function DELETE(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { searchParams } = new URL(request.url)
     const folderId = searchParams.get('folderId')
 
     if (!folderId) {
-      return NextResponse.json(
-        { error: 'ID da pasta é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'ID da pasta é obrigatório' }, { status: 400 })
     }
 
-    await drive.files.delete({
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
+
+    await driveWithAuth.files.delete({
       fileId: folderId
     })
 
@@ -189,10 +185,10 @@ export async function DELETE(request: NextRequest) {
       message: 'Pasta excluída com sucesso'
     })
 
-  } catch (error) {
-    console.error('Erro ao excluir pasta:', error)
+  } catch (error: any) {
+    console.error('Erro ao excluir pasta:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao excluir pasta' },
+      { error: 'Erro ao excluir pasta', details: error.message },
       { status: 500 }
     )
   }
