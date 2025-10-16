@@ -682,7 +682,7 @@ OBSERVAÇÕES
                       rows={10}
                     />
                     <p className="text-sm text-muted-foreground mt-1">
-                      Use {{nomeDaVariavel}} para criar variáveis que serão preenchidas pelo usuário
+                      Use {'{{nomeDaVariavel}}'} para criar variáveis que serão preenchidas pelo usuário
                     </p>
                   </div>
 
