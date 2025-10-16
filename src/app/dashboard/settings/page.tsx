@@ -36,7 +36,7 @@ export default function SettingsPage() {
       if (response.ok && data.success) {
         setTestResult(`Conexão bem-sucedida! ${data.folders.length} pastas encontradas na raiz.`);
       } else {
-        throw new Error(data.error || 'Falha ao testar a API do Google Drive.');
+        throw new Error(data.details || data.error || 'Falha ao testar a API do Google Drive.');
       }
     } catch (err: any) {
       setTestError(err.message || "Ocorreu um erro desconhecido durante o teste.");
@@ -124,4 +124,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
