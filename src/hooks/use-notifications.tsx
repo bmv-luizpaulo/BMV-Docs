@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback } from 'react'
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info'
@@ -25,7 +25,7 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
-export function NotificationProvider({ children }: { children: ReactNode }) {
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
   const showToast = useCallback((toast: Omit<Notification, 'id' | 'type'> & { type: NotificationType }) => {
@@ -78,7 +78,6 @@ export function useNotifications() {
   return context
 }
 
-// Hook para notificacoes especificas do sistema
 export function useSystemNotifications() {
   const { showSuccess, showError, showWarning, showInfo } = useNotifications()
 
@@ -140,3 +139,4 @@ export function useSystemNotifications() {
     notifyUnsupportedFileType
   }
 }
+
