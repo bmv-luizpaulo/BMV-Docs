@@ -1,38 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { drive, oauth2Client } from '@/lib/google-drive'
+import { google } from 'googleapis'
+import { drive, oauth2Client, createOAuth2ClientWithToken } from '@/lib/google-drive'
 
 // Middleware para verificar autenticação
 async function checkAuth(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   if (!authHeader) {
+    console.log('❌ Token de acesso não fornecido')
     return NextResponse.json({ error: 'Token de acesso necessário' }, { status: 401 })
   }
 
   try {
     const token = authHeader.replace('Bearer ', '')
-    oauth2Client.setCredentials({ access_token: token })
-    return null
+    console.log('🔑 Token recebido:', token.substring(0, 20) + '...')
+    
+    // Criar nova instância do OAuth2Client com o token
+    const client = createOAuth2ClientWithToken(token)
+    
+    console.log('✅ Credenciais configuradas com sucesso')
+    return { client }
   } catch (error) {
+    console.error('❌ Erro ao configurar credenciais:', error)
     return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
   }
 }
 
 // GET - Listar pastas
 export async function GET(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  console.log('📁 Iniciando listagem de pastas')
+  
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { searchParams } = new URL(request.url)
     const parentId = searchParams.get('parentId') || 'root'
 
-    const response = await drive.files.list({
-      q: `mimeType = 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`,
+    console.log('🔍 Parent ID:', parentId)
+
+    const query = `mimeType = 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`
+    console.log('🔍 Query final:', query)
+
+    // Criar instância do Drive API com o cliente autenticado
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
+
+    const response = await driveWithAuth.files.list({
+      q: query,
       fields: 'files(id,name,createdTime,modifiedTime,parents)',
       orderBy: 'name'
     })
 
     const folders = response.data.files || []
+    console.log('✅ Pastas encontradas:', folders.length)
 
     return NextResponse.json({
       success: true,
@@ -40,9 +59,10 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Erro ao listar pastas:', error)
+    console.error('❌ Erro ao listar pastas:', error)
+    console.error('❌ Detalhes do erro:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao listar pastas' },
+      { error: 'Erro ao listar pastas', details: error.message },
       { status: 500 }
     )
   }

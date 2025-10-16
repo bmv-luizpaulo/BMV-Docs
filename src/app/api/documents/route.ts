@@ -1,32 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { drive, oauth2Client, DriveDocument } from '@/lib/google-drive'
+import { google } from 'googleapis'
+import { drive, oauth2Client, DriveDocument, createOAuth2ClientWithToken } from '@/lib/google-drive'
 
 // Middleware para verificar autenticação
 async function checkAuth(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   if (!authHeader) {
+    console.log('❌ Token de acesso não fornecido')
     return NextResponse.json({ error: 'Token de acesso necessário' }, { status: 401 })
   }
 
   try {
     const token = authHeader.replace('Bearer ', '')
-    oauth2Client.setCredentials({ access_token: token })
-    return null
+    console.log('🔑 Token recebido:', token.substring(0, 20) + '...')
+    
+    // Criar nova instância do OAuth2Client com o token
+    const client = createOAuth2ClientWithToken(token)
+    
+    console.log('✅ Credenciais configuradas com sucesso')
+    return { client }
   } catch (error) {
+    console.error('❌ Erro ao configurar credenciais:', error)
     return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
   }
 }
 
 // GET - Listar documentos
 export async function GET(request: NextRequest) {
-  const authError = await checkAuth(request)
-  if (authError) return authError
+  console.log('📄 Iniciando listagem de documentos')
+  
+  const authResult = await checkAuth(request)
+  if (authResult instanceof NextResponse) return authResult
 
   try {
     const { searchParams } = new URL(request.url)
     const folderId = searchParams.get('folderId')
     const mimeType = searchParams.get('mimeType')
     const q = searchParams.get('q') // query de busca
+
+    console.log('🔍 Parâmetros:', { folderId, mimeType, q })
 
     let query = "trashed = false"
     
@@ -42,7 +54,12 @@ export async function GET(request: NextRequest) {
       query += ` and name contains '${q}'`
     }
 
-    const response = await drive.files.list({
+    console.log('🔍 Query final:', query)
+
+    // Criar instância do Drive API com o cliente autenticado
+    const driveWithAuth = google.drive({ version: 'v3', auth: authResult.client })
+
+    const response = await driveWithAuth.files.list({
       q: query,
       fields: 'files(id,name,mimeType,size,createdTime,modifiedTime,webViewLink,webContentLink,parents,description,starred)',
       orderBy: 'modifiedTime desc',
@@ -50,6 +67,7 @@ export async function GET(request: NextRequest) {
     })
 
     const documents: DriveDocument[] = response.data.files || []
+    console.log('✅ Documentos encontrados:', documents.length)
 
     return NextResponse.json({
       success: true,
@@ -58,9 +76,10 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Erro ao listar documentos:', error)
+    console.error('❌ Erro ao listar documentos:', error)
+    console.error('❌ Detalhes do erro:', error.message)
     return NextResponse.json(
-      { error: 'Erro ao listar documentos' },
+      { error: 'Erro ao listar documentos', details: error.message },
       { status: 500 }
     )
   }

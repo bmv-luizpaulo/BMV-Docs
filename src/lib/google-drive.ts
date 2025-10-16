@@ -8,6 +8,22 @@ export const oauth2Client = new OAuth2Client(
   process.env.NEXTAUTH_URL + '/api/auth/callback/google'
 )
 
+// Função para criar uma nova instância do OAuth2Client com token
+export function createOAuth2ClientWithToken(accessToken: string) {
+  const client = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.NEXTAUTH_URL + '/api/auth/callback/google'
+  )
+  
+  client.setCredentials({
+    access_token: accessToken,
+    token_type: 'Bearer'
+  })
+  
+  return client
+}
+
 // Configuração do Google Drive API
 export const drive = google.drive({ version: 'v3', auth: oauth2Client })
 
