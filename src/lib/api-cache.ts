@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-
 interface CacheItem<T> {
   value: T
   timestamp: number
@@ -127,38 +125,3 @@ class APICache {
 
 // Instância global do cache
 export const apiCache = new APICache()
-
-// Hook para usar o cache em componentes React
-export function useAPICache() {
-  return {
-    get: apiCache.get.bind(apiCache),
-    set: apiCache.set.bind(apiCache),
-    has: apiCache.has.bind(apiCache),
-    delete: apiCache.delete.bind(apiCache),
-    clear: apiCache.clear.bind(apiCache),
-    getDocuments: apiCache.getDocuments.bind(apiCache),
-    setDocuments: apiCache.setDocuments.bind(apiCache),
-    getFolders: apiCache.getFolders.bind(apiCache),
-    setFolders: apiCache.setFolders.bind(apiCache),
-    invalidateDocuments: apiCache.invalidateDocuments.bind(apiCache),
-    invalidateFolders: apiCache.invalidateFolders.bind(apiCache),
-    getStats: apiCache.getStats.bind(apiCache)
-  }
-}
-
-// Utilitário para debounce
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-
-  return debouncedValue
-}
