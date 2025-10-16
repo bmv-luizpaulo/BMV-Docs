@@ -1,19 +1,12 @@
 import { google } from 'googleapis'
 import { OAuth2Client } from 'google-auth-library'
 
-// Configuração do OAuth2
-export const oauth2Client = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.NEXTAUTH_URL
-)
-
 // Função para criar uma nova instância do OAuth2Client com token
-export function createOAuth2ClientWithToken(accessToken: string) {
+export function createOAuth2ClientWithToken(accessToken: string): OAuth2Client {
   const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.NEXTAUTH_URL
+    process.env.NEXTAUTH_URL + '/api/auth/callback/google'
   )
   
   client.setCredentials({
@@ -24,8 +17,8 @@ export function createOAuth2ClientWithToken(accessToken: string) {
   return client
 }
 
-// Configuração do Google Drive API
-export const drive = google.drive({ version: 'v3', auth: oauth2Client as any })
+// Configuração do Google Drive API (sem auth global)
+export const drive = google.drive({ version: 'v3' })
 
 // Escopos necessários para Google Drive
 export const SCOPES = [
@@ -36,6 +29,11 @@ export const SCOPES = [
 
 // Função para gerar URL de autorização
 export function getAuthUrl(): string {
+  const oauth2Client = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.NEXTAUTH_URL
+  );
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -45,14 +43,13 @@ export function getAuthUrl(): string {
 
 // Função para trocar código por tokens
 export async function getTokens(code: string) {
+  const oauth2Client = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.NEXTAUTH_URL
+  );
   const { tokens } = await oauth2Client.getToken(code)
-  oauth2Client.setCredentials(tokens)
   return tokens
-}
-
-// Função para configurar credenciais
-export function setCredentials(tokens: any) {
-  oauth2Client.setCredentials(tokens)
 }
 
 // Tipos para documentos
