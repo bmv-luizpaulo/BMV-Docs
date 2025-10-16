@@ -128,16 +128,18 @@ const ChartsSection = () => {
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-            <BarChart data={stats.chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="Completo" fill="var(--color-Completo)" />
-              <Bar dataKey="Pendente" fill="var(--color-Pendente)" />
-              <Bar dataKey="Incompleto" fill="var(--color-Incompleto)" />
-              <Bar dataKey="Divergência" fill="var(--color-Divergência)" />
-            </BarChart>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="Completo" stackId="a" fill="var(--color-Completo)" />
+                <Bar dataKey="Pendente" stackId="a" fill="var(--color-Pendente)" />
+                <Bar dataKey="Incompleto" stackId="a" fill="var(--color-Incompleto)" />
+                <Bar dataKey="Divergência" stackId="a" fill="var(--color-Divergência)" />
+              </BarChart>
+            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>

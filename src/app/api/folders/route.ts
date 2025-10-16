@@ -31,6 +31,14 @@ async function checkAuth(request: NextRequest) {
 export async function GET(request: NextRequest) {
   console.log('📁 Iniciando listagem de pastas')
   
+  if (process.env.GEMINI_API_KEY) {
+    console.log('✅ Chave de API do Google encontrada.');
+    google.options({ key: process.env.GEMINI_API_KEY });
+  } else {
+    console.error('❌ Chave de API do Google (GEMINI_API_KEY) não encontrada nas variáveis de ambiente.');
+    return NextResponse.json({ error: 'Configuração do servidor incompleta: Chave de API ausente.', details: 'A variável de ambiente GEMINI_API_KEY não está definida.' }, { status: 500 });
+  }
+
   const authResult = await checkAuth(request)
   if (authResult instanceof NextResponse) return authResult
 
@@ -85,6 +93,12 @@ export async function GET(request: NextRequest) {
 
 // POST - Criar pasta
 export async function POST(request: NextRequest) {
+  if (process.env.GEMINI_API_KEY) {
+    google.options({ key: process.env.GEMINI_API_KEY });
+  } else {
+    return NextResponse.json({ error: 'Configuração do servidor incompleta: Chave de API ausente.' }, { status: 500 });
+  }
+
   const authResult = await checkAuth(request)
   if (authResult instanceof NextResponse) return authResult
 
@@ -125,6 +139,12 @@ export async function POST(request: NextRequest) {
 
 // PUT - Atualizar pasta
 export async function PUT(request: NextRequest) {
+  if (process.env.GEMINI_API_KEY) {
+    google.options({ key: process.env.GEMINI_API_KEY });
+  } else {
+    return NextResponse.json({ error: 'Configuração do servidor incompleta: Chave de API ausente.' }, { status: 500 });
+  }
+
   const authResult = await checkAuth(request)
   if (authResult instanceof NextResponse) return authResult
 
@@ -164,6 +184,12 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Excluir pasta
 export async function DELETE(request: NextRequest) {
+  if (process.env.GEMINI_API_KEY) {
+    google.options({ key: process.env.GEMINI_API_KEY });
+  } else {
+    return NextResponse.json({ error: 'Configuração do servidor incompleta: Chave de API ausente.' }, { status: 500 });
+  }
+  
   const authResult = await checkAuth(request)
   if (authResult instanceof NextResponse) return authResult
 
