@@ -88,7 +88,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     showError,
     showWarning,
     showInfo
-  }
+  };
 
   return (
     <NotificationContext.Provider value={contextValue}>
