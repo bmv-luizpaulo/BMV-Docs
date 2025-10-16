@@ -1,3 +1,5 @@
+"use client"
+
 import Link from 'next/link'
 import {
   Bell,
@@ -39,6 +41,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import AuthGuard from '@/components/auth/auth-guard'
+import { useAuth } from '@/firebase/provider'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
   children,
@@ -55,6 +59,18 @@ export default function DashboardLayout({
     { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
     { href: '/dashboard/history', icon: History, label: 'Histórico' },
   ]
+
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
 
   return (
     <AuthGuard>
@@ -160,10 +176,14 @@ export default function DashboardLayout({
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Configurações</DropdownMenuItem>
-                <DropdownMenuItem>Suporte</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">Configurações</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/support">Suporte</Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Sair</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>Sair</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
